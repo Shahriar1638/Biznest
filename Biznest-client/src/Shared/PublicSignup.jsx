@@ -94,7 +94,7 @@ const PublicSignup = () => {
                             {/* Email */}
                             <div className="form-control">
                                 <label className="label">
-                                    <span className="label-text">Email *</span>
+                                    <span className="label-text">Email</span>
                                 </label>
                                 <input
                                     type="email"
@@ -110,7 +110,7 @@ const PublicSignup = () => {
                             {/* Username */}
                             <div className="form-control">
                                 <label className="label">
-                                    <span className="label-text">Username *</span>
+                                    <span className="label-text">Username</span>
                                 </label>
                                 <input
                                     type="text"
@@ -126,7 +126,7 @@ const PublicSignup = () => {
                             {/* Password */}
                             <div className="form-control">
                                 <label className="label">
-                                    <span className="label-text">Password *</span>
+                                    <span className="label-text">Password</span>
                                 </label>
                                 <input
                                     type="password"
@@ -142,7 +142,7 @@ const PublicSignup = () => {
                             {/* Confirm Password */}
                             <div className="form-control">
                                 <label className="label">
-                                    <span className="label-text">Confirm Password *</span>
+                                    <span className="label-text">Confirm Password</span>
                                 </label>
                                 <input
                                     type="password"
@@ -158,7 +158,7 @@ const PublicSignup = () => {
                             {/* Phone Number */}
                             <div className="form-control">
                                 <label className="label">
-                                    <span className="label-text">Phone Number *</span>
+                                    <span className="label-text">Phone Number</span>
                                 </label>
                                 <input
                                     type="tel"
@@ -174,7 +174,7 @@ const PublicSignup = () => {
                             {/* Gender */}
                             <div className="form-control">
                                 <label className="label">
-                                    <span className="label-text">Gender *</span>
+                                    <span className="label-text">Gender</span>
                                 </label>
                                 <select
                                     name="gender"
@@ -186,14 +186,13 @@ const PublicSignup = () => {
                                     <option value="">Select Gender</option>
                                     <option value="male">Male</option>
                                     <option value="female">Female</option>
-                                    <option value="other">Other</option>
                                 </select>
                             </div>
 
                             {/* Role Type */}
                             <div className="form-control">
                                 <label className="label">
-                                    <span className="label-text">Account Type *</span>
+                                    <span className="label-text">Account Type</span>
                                 </label>
                                 <select
                                     name="roleType"
@@ -226,7 +225,7 @@ const PublicSignup = () => {
                         {/* Address */}
                         <div className="form-control">
                             <label className="label">
-                                <span className="label-text">Address *</span>
+                                <span className="label-text">Address</span>
                             </label>
                             <textarea
                                 name="address"

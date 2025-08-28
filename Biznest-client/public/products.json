@@ -1,0 +1,219 @@
+[
+    {
+        "productId": "PRD001",
+        "selleremail": "seller1@example.com",
+        "product_name": "Organic Honey",
+        "product_imgurl": "https://i.ibb.co/DHrTWPzT/product.jpg",
+        "price": 12.99,
+        "quantity_description": [{
+            "unit_value": 500,
+            "unit_type": "mililiters-ml",
+            "unit_quantity": 25
+        }, {
+            "unit_value": 1,
+            "unit_type": "liters-l",
+            "unit_quantity": 15
+        }],
+        "product_publishdate": "2024-05-01",
+        "category": "Food",
+        "product_status": "released",
+        "rating": [
+            { "email": "user1@example.com", "rate": 4.5 },
+            { "email": "user2@example.com", "rate": 5.0 }
+        ],
+        "sell_count": ["user1@example.com", "user3@example.com"]
+    },
+    {
+        "productId": "PRD002",
+        "selleremail": "seller2@example.com",
+        "product_name": "Bluetooth Speaker",
+        "product_imgurl": "hthttps://i.ibb.co/DHrTWPzT/product.jpg",
+        "price": 29.99,
+        "quantity_description": [{
+            "unit_value": 1,
+            "unit_type": "pieces-pcs",
+            "unit_quantity": 50
+        }],
+        "product_publishdate": "2024-05-03",
+        "category": "Electronics",
+        "product_status": "released",
+        "rating": [
+            { "email": "user4@example.com", "rate": 4.0 }
+        ],
+        "sell_count": ["user4@example.com"]
+    },
+    {
+        "productId": "PRD003",
+        "selleremail": "seller3@example.com",
+        "product_name": "Whole Wheat Bread",
+        "product_imgurl": "https://i.ibb.co/DHrTWPzT/product.jpg",
+        "price": 2.5,
+        "quantity_description": [{
+            "unit_value": 400,
+            "unit_type": "gram-g",
+            "unit_quantity": 30
+        }, {
+            "unit_value": 800,
+            "unit_type": "gram-g",
+            "unit_quantity": 20
+        }],
+        "product_publishdate": "2024-05-05",
+        "category": "Food",
+        "product_status": "pending",
+        "rating": [],
+        "sell_count": []
+    },
+    {
+        "productId": "PRD004",
+        "selleremail": "seller4@example.com",
+        "product_name": "Cotton T-Shirt",
+        "product_imgurl": "hhttps://i.ibb.co/DHrTWPzT/product.jpg",
+        "price": 15.0,
+        "quantity_description": [{
+            "unit_value": 1,
+            "unit_type": "pieces-pcs",
+            "unit_quantity": 100
+        }],
+        "product_publishdate": "2024-05-07",
+        "category": "Clothing",
+        "product_status": "released",
+        "rating": [
+            { "email": "user5@example.com", "rate": 3.5 }
+        ],
+        "sell_count": ["user5@example.com", "user6@example.com"]
+    },
+    {
+        "productId": "PRD005",
+        "selleremail": "seller5@example.com",
+        "product_name": "Stainless Steel Water Bottle",
+        "product_imgurl": "hhttps://i.ibb.co/DHrTWPzT/product.jpg",
+        "price": 10.0,
+        "quantity_description": [{
+            "unit_value": 500,
+            "unit_type": "mililiters-ml",
+            "unit_quantity": 40
+        }, {
+            "unit_value": 750,
+            "unit_type": "mililiters-ml",
+            "unit_quantity": 25
+        }, {
+            "unit_value": 1,
+            "unit_type": "liters-l",
+            "unit_quantity": 15
+        }],
+        "product_publishdate": "2024-05-10",
+        "category": "Accessories",
+        "product_status": "released",
+        "rating": [
+            { "email": "user7@example.com", "rate": 4.8 }
+        ],
+        "sell_count": ["user7@example.com"]
+    },
+    {
+        "productId": "PRD006",
+        "selleremail": "seller6@example.com",
+        "product_name": "LED Desk Lamp",
+        "product_imgurl": "https://i.ibb.co/DHrTWPzT/product.jpg.jpg",
+        "price": 22.5,
+        "quantity_description": [{
+            "unit_value": 1,
+            "unit_type": "pieces-pcs",
+            "unit_quantity": 35
+        }],
+        "product_publishdate": "2024-05-12",
+        "category": "Home",
+        "product_status": "pending",
+        "rating": [],
+        "sell_count": []
+    },
+    {
+        "productId": "PRD007",
+        "selleremail": "seller7@example.com",
+        "product_name": "Almonds",
+        "product_imgurl": "hthttps://i.ibb.co/DHrTWPzT/product.jpg",
+        "price": 8.0,
+        "quantity_description": [{
+            "unit_value": 250,
+            "unit_type": "gram-g",
+            "unit_quantity": 50
+        }, {
+            "unit_value": 500,
+            "unit_type": "gram-g",
+            "unit_quantity": 30
+        }, {
+            "unit_value": 1,
+            "unit_type": "kilogram-kg",
+            "unit_quantity": 15
+        }],
+        "product_publishdate": "2024-05-14",
+        "category": "Food",
+        "product_status": "released",
+        "rating": [
+            { "email": "user8@example.com", "rate": 5.0 }
+        ],
+        "sell_count": ["user8@example.com", "user9@example.com"]
+    },
+    {
+        "productId": "PRD008",
+        "selleremail": "seller8@example.com",
+        "product_name": "Notebook",
+        "product_imgurl": "htthttps://i.ibb.co/DHrTWPzT/product.jpg",
+        "price": 3.0,
+        "quantity_description": [{
+            "unit_value": 1,
+            "unit_type": "pieces-pcs",
+            "unit_quantity": 200
+        }],
+        "product_publishdate": "2024-05-16",
+        "category": "Stationery",
+        "product_status": "released",
+        "rating": [
+            { "email": "user10@example.com", "rate": 4.2 }
+        ],
+        "sell_count": ["user10@example.com"]
+    },
+    {
+        "productId": "PRD009",
+        "selleremail": "seller9@example.com",
+        "product_name": "Shampoo",
+        "product_imgurl": "hthttps://i.ibb.co/DHrTWPzT/product.jpg",
+        "price": 6.5,
+        "quantity_description": [{
+            "unit_value": 200,
+            "unit_type": "mililiters-ml",
+            "unit_quantity": 32
+        }, {
+            "unit_value": 500,
+            "unit_type": "mililiters-ml",
+            "unit_quantity": 25
+        }, {
+            "unit_value": 1,
+            "unit_type": "liters-l",
+            "unit_quantity": 18
+        }],
+        "product_publishdate": "2024-05-18",
+        "category": "Personal Care",
+        "product_status": "released",
+        "rating": [
+            { "email": "user11@example.com", "rate": 3.8 }
+        ],
+        "sell_count": ["user11@example.com"]
+    },
+    {
+        "productId": "PRD010",
+        "selleremail": "seller10@example.com",
+        "product_name": "Wireless Mouse",
+        "product_imgurl": "https://i.ibb.co/DHrTWPzT/product.jpg",
+        "price": 18.0,
+        "quantity_description": [{
+            "unit_value": 1,
+            "unit_type": "pieces-pcs",
+            "unit_quantity": 75
+        }],
+        "product_publishdate": "2024-05-20",
+        "category": "Electronics",
+        "product_status": "rejected",
+        "rating": [],
+        "sell_count": []
+    }
+]

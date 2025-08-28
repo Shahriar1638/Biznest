@@ -23,7 +23,8 @@ module.exports = (userCollection) => {
 // ----------------------------------------------> Signup start point <------------------------------
   router.post('/signup', async (req, res) => {
     try {
-      const { userinfo } = req.body;
+      const userinfo = req.body;
+      console.log(userinfo);
       const email = userinfo.email;
       const password = userinfo.password;
       
@@ -66,7 +67,8 @@ module.exports = (userCollection) => {
 // ----------------------------------------------> Login start point <------------------------------
   router.post('/login', async (req, res) => {
     try {
-      const { authinfo } = req.body;
+      const authinfo = req.body;
+      console.log(authinfo);
       const { email, password } = authinfo;
       
       // Find user by email
@@ -100,7 +102,7 @@ module.exports = (userCollection) => {
         success: true,
         message: 'Login successful',
         token,
-        user: user
+        user
       });
       
     } catch (error) {
