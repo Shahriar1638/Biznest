@@ -44,7 +44,7 @@ const Authprovider = ({children}) => {
     
     const login = async (userinfo) => {
         setLoading(true)
-        return axiosPublic.post('/login', userinfo)
+        return axiosPublic.post('/auth/login', userinfo)
             .then(res => {
                 const userData = res.data.user;
                 const token = res.data.token;
@@ -64,19 +64,15 @@ const Authprovider = ({children}) => {
     }
     const signupUser = async (userinfo) => {
         setLoading(true)
-        return axiosPublic.post('/signup', userinfo)
+        console.log(userinfo)
+        return axiosPublic.post('/auth/signup', userinfo)
             .then(res => {
-                const userData = res.data.user;
-                const token = res.data.token;
-                
-                // Store user info and token in localStorage
-                localStorage.setItem('user-info', JSON.stringify(userData));
-                localStorage.setItem('access-token', token);
-                
-                setUser(userData)
-                setLoading(false)
-                return userData
-            })
+                if (res.data.success) {
+                    console.log(res.data.message);
+                } else {
+                    console.error('Unexpected response:', res.data);
+                }
+            })    
             .catch(err => {
                 setLoading(false)
                 throw err
@@ -84,7 +80,7 @@ const Authprovider = ({children}) => {
     }
     const logOut = async () => {
         setLoading(true)
-        return axiosPublic.post('/logout')
+        return axiosPublic.post('/auth/logout')
             .then(() => {
                 // Clear user info and token from localStorage
                 localStorage.removeItem('user-info');
