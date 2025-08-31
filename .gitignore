@@ -1,2 +1,5 @@
 # Ignore the ideas folder
 Ideas/
+
+# Ignore environment file in BizNest-server
+BizNest-server/.env

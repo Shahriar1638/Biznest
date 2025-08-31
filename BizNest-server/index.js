@@ -27,9 +27,12 @@ async function run() {
     // await client.connect();
 
     const userCollection = client.db("BiznestDB").collection("userinfos");
+    const productCollection = client.db("BiznestDB").collection("products_collection");
 
     const Authentications = require('./Paths/Auth')(userCollection);
+    const productAPI = require('./Paths/Products')(productCollection);
 
+    app.use('/products', productAPI);
     app.use('/auth', Authentications);
 
     // Send a ping to confirm a successful connection

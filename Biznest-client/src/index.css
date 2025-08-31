@@ -1,2 +1,168 @@
 @import "tailwindcss";
 @plugin "daisyui";
+@import '@fontsource/roboto/300.css';
+@import '@fontsource/roboto/400.css';
+@import '@fontsource/roboto/500.css';
+@import '@fontsource/roboto/700.css';
+
+/* ===== COLOR THEME VARIABLES ===== */
+:root {
+  /* Primary Yellow Theme */
+  --primary-50: #fffbeb;
+  --primary-100: #fef3c7;
+  --primary-200: #fde68a;
+  --primary-300: #fcd34d;
+  --primary-400: #fbbf24;
+  --primary-500: #f59e0b;
+  --primary-600: #d97706;
+  --primary-700: #b45309;
+  --primary-800: #92400e;
+  --primary-900: #78350f;
+
+  /* Neutral Colors */
+  --neutral-50: #fafafa;
+  --neutral-100: #f5f5f5;
+  --neutral-200: #e5e5e5;
+  --neutral-300: #d4d4d4;
+  --neutral-400: #a3a3a3;
+  --neutral-500: #737373;
+  --neutral-600: #525252;
+  --neutral-700: #404040;
+  --neutral-800: #262626;
+  --neutral-900: #171717;
+
+  /* Semantic Colors */
+  --success-light: #dcfce7;
+  --success: #16a34a;
+  --success-dark: #15803d;
+  
+  --error-light: #fef2f2;
+  --error: #dc2626;
+  --error-dark: #b91c1c;
+  
+  --warning-light: #fefce8;
+  --warning: #ca8a04;
+  --warning-dark: #a16207;
+  
+  --info-light: #eff6ff;
+  --info: #2563eb;
+  --info-dark: #1d4ed8;
+
+  /* Background Colors */
+  --bg-primary: #ffffff;
+  --bg-secondary: var(--neutral-50);
+  --bg-accent: var(--primary-50);
+
+  /* Text Colors */
+  --text-primary: var(--neutral-900);
+  --text-secondary: var(--neutral-600);
+  --text-muted: var(--neutral-500);
+
+  /* Border Colors */
+  --border-light: var(--neutral-200);
+  --border-medium: var(--neutral-300);
+  --border-dark: var(--neutral-400);
+
+  /* Shadow Variables */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+
+  /* Transitions */
+  --transition-fast: 150ms ease-in-out;
+  --transition-normal: 250ms ease-in-out;
+  --transition-slow: 350ms ease-in-out;
+}
+
+/* ===== GLOBAL BASE STYLES ===== */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ===== CUSTOM COMPONENT OVERRIDES ===== */
+/* Override Tailwind defaults with our theme */
+.btn-biznest-primary {
+  @apply bg-amber-500 hover:bg-amber-600 text-white font-medium px-6 py-2 rounded-lg transition-all duration-150 ease-in-out;
+  transform: translateY(0);
+}
+
+.btn-biznest-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-biznest-secondary {
+  @apply bg-white hover:bg-gray-50 text-gray-900 font-medium px-6 py-2 rounded-lg border border-gray-300 hover:border-gray-400 transition-all duration-150 ease-in-out;
+}
+
+.btn-biznest-outline {
+  @apply bg-transparent hover:bg-amber-500 text-amber-600 hover:text-white font-medium px-6 py-2 rounded-lg border border-amber-500 transition-all duration-150 ease-in-out;
+}
+
+.btn-biznest-outline-white {
+  @apply bg-white hover:bg-gray-100 text-gray-800 hover:text-gray-900 font-medium px-6 py-2 rounded-lg border border-white transition-all duration-150 ease-in-out;
+}
+
+.input-biznest {
+  @apply w-full px-4 py-2 border border-gray-300 rounded-lg text-sm transition-all duration-150 ease-in-out focus:outline-none focus:border-amber-500;
+  min-height: 2.5rem;
+}
+
+.input-biznest:focus {
+  box-shadow: 0 0 0 3px rgb(245 158 11 / 0.1);
+}
+
+.card-biznest {
+  @apply bg-white rounded-xl shadow-sm border border-gray-200 transition-shadow duration-250 ease-in-out;
+}
+
+.card-biznest:hover {
+  box-shadow: var(--shadow-md);
+}
+
+/* ===== SMOOTH ANIMATIONS ===== */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(-20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.6s ease-out;
+}
+
+.animate-slide-in {
+  animation: slideIn 0.4s ease-out;
+}
+
+/* ===== TAILWIND CUSTOM UTILITIES ===== */
+.transition-biznest {
+  transition: all var(--transition-fast);
+}
+
+.text-biznest-primary {
+  color: var(--text-primary);
+}
+
+.text-biznest-secondary {
+  color: var(--text-secondary);
+}
+
+.text-biznest-muted {
+  color: var(--text-muted);
+}
+
+.bg-biznest-accent {
+  background-color: var(--bg-accent);
+}

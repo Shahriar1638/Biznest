@@ -22,7 +22,8 @@
         "type": "customer",
         "details": {
             "customerID": "CUS001",
-            "points": 150
+            "points": 150,
+            "wishlist": ["PRD011", "PRD015", "PRD019"]
         }
         },
         "username": "johndoe",
@@ -39,7 +40,8 @@
         "type": "customer",
         "details": {
             "customerID": "CUS002",
-            "points": 320
+            "points": 320,
+            "wishlist": ["PRD016", "PRD022", "PRD025", "PRD031"]
         }
         },
         "username": "janesmith",
