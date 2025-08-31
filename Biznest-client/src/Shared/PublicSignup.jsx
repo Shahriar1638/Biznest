@@ -78,23 +78,23 @@ const PublicSignup = () => {
     };
 
     return (
-        <div className="min-h-screen bg-base-200 flex items-center justify-center px-4 py-8">
-            <div className="card w-full max-w-2xl bg-base-100 shadow-xl">
-                <div className="card-body">
-                    <h2 className="card-title text-2xl font-bold text-center mb-6">Join BizNest</h2>
+        <div>
+            <div>
+                <div>
+                    <h2>Join BizNest</h2>
                     
                     {error && (
-                        <div className="alert alert-error mb-4">
+                        <div>
                             <span>{error}</span>
                         </div>
                     )}
 
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <form onSubmit={handleSubmit}>
+                        <div>
                             {/* Email */}
-                            <div className="form-control">
-                                <label className="label">
-                                    <span className="label-text">Email</span>
+                            <div>
+                                <label>
+                                    <span>Email</span>
                                 </label>
                                 <input
                                     type="email"
@@ -102,15 +102,14 @@ const PublicSignup = () => {
                                     value={formData.email}
                                     onChange={handleChange}
                                     placeholder="Enter your email"
-                                    className="input input-bordered"
                                     required
                                 />
                             </div>
 
                             {/* Username */}
-                            <div className="form-control">
-                                <label className="label">
-                                    <span className="label-text">Username</span>
+                            <div>
+                                <label>
+                                    <span>Username</span>
                                 </label>
                                 <input
                                     type="text"
@@ -118,15 +117,14 @@ const PublicSignup = () => {
                                     value={formData.username}
                                     onChange={handleChange}
                                     placeholder="Choose a username"
-                                    className="input input-bordered"
                                     required
                                 />
                             </div>
 
                             {/* Password */}
-                            <div className="form-control">
-                                <label className="label">
-                                    <span className="label-text">Password</span>
+                            <div>
+                                <label>
+                                    <span>Password</span>
                                 </label>
                                 <input
                                     type="password"
@@ -134,15 +132,14 @@ const PublicSignup = () => {
                                     value={formData.password}
                                     onChange={handleChange}
                                     placeholder="Enter your password"
-                                    className="input input-bordered"
                                     required
                                 />
                             </div>
 
                             {/* Confirm Password */}
-                            <div className="form-control">
-                                <label className="label">
-                                    <span className="label-text">Confirm Password</span>
+                            <div>
+                                <label>
+                                    <span>Confirm Password</span>
                                 </label>
                                 <input
                                     type="password"
@@ -150,15 +147,14 @@ const PublicSignup = () => {
                                     value={formData.confirmPassword}
                                     onChange={handleChange}
                                     placeholder="Confirm your password"
-                                    className="input input-bordered"
                                     required
                                 />
                             </div>
 
                             {/* Phone Number */}
-                            <div className="form-control">
-                                <label className="label">
-                                    <span className="label-text">Phone Number</span>
+                            <div>
+                                <label>
+                                    <span>Phone Number</span>
                                 </label>
                                 <input
                                     type="tel"
@@ -166,21 +162,19 @@ const PublicSignup = () => {
                                     value={formData.phone_number}
                                     onChange={handleChange}
                                     placeholder="123-456-7890"
-                                    className="input input-bordered"
                                     required
                                 />
                             </div>
 
                             {/* Gender */}
-                            <div className="form-control">
-                                <label className="label">
-                                    <span className="label-text">Gender</span>
+                            <div>
+                                <label>
+                                    <span>Gender</span>
                                 </label>
                                 <select
                                     name="gender"
                                     value={formData.gender}
                                     onChange={handleChange}
-                                    className="select select-bordered"
                                     required
                                 >
                                     <option value="">Select Gender</option>
@@ -190,15 +184,14 @@ const PublicSignup = () => {
                             </div>
 
                             {/* Role Type */}
-                            <div className="form-control">
-                                <label className="label">
-                                    <span className="label-text">Account Type</span>
+                            <div>
+                                <label>
+                                    <span>Account Type</span>
                                 </label>
                                 <select
                                     name="roleType"
                                     value={formData.role.type}
                                     onChange={handleChange}
-                                    className="select select-bordered"
                                     required
                                 >
                                     <option value="customer">Customer</option>
@@ -207,9 +200,9 @@ const PublicSignup = () => {
                             </div>
 
                             {/* Profile URL */}
-                            <div className="form-control">
-                                <label className="label">
-                                    <span className="label-text">Profile Image URL</span>
+                            <div>
+                                <label>
+                                    <span>Profile Image URL</span>
                                 </label>
                                 <input
                                     type="url"
@@ -217,32 +210,30 @@ const PublicSignup = () => {
                                     value={formData.profileurl}
                                     onChange={handleChange}
                                     placeholder="https://example.com/image.jpg"
-                                    className="input input-bordered"
                                 />
                             </div>
                         </div>
 
                         {/* Address */}
-                        <div className="form-control">
-                            <label className="label">
-                                <span className="label-text">Address</span>
+                        <div>
+                            <label>
+                                <span>Address</span>
                             </label>
                             <textarea
                                 name="address"
                                 value={formData.address}
                                 onChange={handleChange}
                                 placeholder="Enter your full address"
-                                className="textarea textarea-bordered"
                                 rows="3"
                                 required
                             />
                         </div>
 
                         {/* Role-specific information display */}
-                        <div className="alert alert-info">
+                        <div>
                             <div>
-                                <h3 className="font-bold">Account Type: {formData.role.type}</h3>
-                                <div className="text-sm">
+                                <h3>Account Type: {formData.role.type}</h3>
+                                <div>
                                     {formData.role.type === 'customer' && (
                                         <p>As a customer, you can browse and purchase products from our marketplace.</p>
                                     )}
@@ -253,10 +244,9 @@ const PublicSignup = () => {
                             </div>
                         </div>
 
-                        <div className="form-control mt-6">
+                        <div>
                             <button 
                                 type="submit" 
-                                className={`btn btn-primary ${isLoading ? 'loading' : ''}`}
                                 disabled={isLoading}
                             >
                                 {isLoading ? 'Creating Account...' : 'Create Account'}
@@ -264,12 +254,12 @@ const PublicSignup = () => {
                         </div>
                     </form>
 
-                    <div className="divider">OR</div>
+                    <div>OR</div>
                     
-                    <div className="text-center">
-                        <p className="text-sm">
+                    <div>
+                        <p>
                             Already have an account?{' '}
-                            <Link to="/login" className="link link-primary">
+                            <Link to="/login">
                                 Login here
                             </Link>
                         </p>

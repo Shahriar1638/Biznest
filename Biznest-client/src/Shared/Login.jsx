@@ -36,21 +36,21 @@ const Login = () => {
     };
 
     return (
-        <div className="min-h-screen bg-base-200 flex items-center justify-center px-4">
-            <div className="card w-full max-w-md bg-base-100 shadow-xl">
-                <div className="card-body">
-                    <h2 className="card-title text-2xl font-bold text-center mb-6">Login to BizNest</h2>
+        <div>
+            <div>
+                <div>
+                    <h2>Login to BizNest</h2>
                     
                     {error && (
-                        <div className="alert alert-error mb-4">
+                        <div>
                             <span>{error}</span>
                         </div>
                     )}
 
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                        <div className="form-control">
-                            <label className="label">
-                                <span className="label-text">Email</span>
+                    <form onSubmit={handleSubmit}>
+                        <div>
+                            <label>
+                                <span>Email</span>
                             </label>
                             <input
                                 type="email"
@@ -58,14 +58,13 @@ const Login = () => {
                                 value={formData.email}
                                 onChange={handleChange}
                                 placeholder="Enter your email"
-                                className="input input-bordered"
                                 required
                             />
                         </div>
 
-                        <div className="form-control">
-                            <label className="label">
-                                <span className="label-text">Password</span>
+                        <div>
+                            <label>
+                                <span>Password</span>
                             </label>
                             <input
                                 type="password"
@@ -73,15 +72,13 @@ const Login = () => {
                                 value={formData.password}
                                 onChange={handleChange}
                                 placeholder="Enter your password"
-                                className="input input-bordered"
                                 required
                             />
                         </div>
 
-                        <div className="form-control mt-6">
+                        <div>
                             <button 
                                 type="submit" 
-                                className={`btn btn-primary ${isLoading ? 'loading' : ''}`}
                                 disabled={isLoading}
                             >
                                 {isLoading ? 'Logging in...' : 'Login'}
@@ -89,12 +86,12 @@ const Login = () => {
                         </div>
                     </form>
 
-                    <div className="divider">OR</div>
+                    <div>OR</div>
                     
-                    <div className="text-center">
-                        <p className="text-sm">
+                    <div>
+                        <p>
                             Don't have an account?{' '}
-                            <Link to="/signup" className="link link-primary">
+                            <Link to="/signup">
                                 Sign up here
                             </Link>
                         </p>
