@@ -1,10 +1,13 @@
 import { createBrowserRouter } from "react-router-dom";
 import Layout from "../Layout/Layout";
 import ErrorPage from "../ErrorPage/ErrorPage";
-import Login from "../Shared/Login";
-import PublicSignup from "../Shared/PublicSignup";
+import Login from "../Shared/AuthPage/Login";
+import PublicSignup from "../Shared/AuthPage/PublicSignup";
 import CustomerHome from "../Pages/Homepage/CustomerHome";
 import SellerHome from "../Pages/Homepage/SellerHome";
+import DefaultHome from "../Pages/Homepage/DefaultHome";
+import Help_nd_Support from "../Pages/Help_nd_Support/Help_nd_Support";
+import AllProducts from "../Pages/All Products/AllProducts";
 
 const Routes = createBrowserRouter([
     {
@@ -23,6 +26,14 @@ const Routes = createBrowserRouter([
             {
                 path: "/seller-home",
                 element: <SellerHome />
+            },
+            {
+                path: "/help-nd-support",
+                element: <Help_nd_Support />
+            },
+            {
+                path: "/allproducts",
+                element: <AllProducts />
             }
 
         ]

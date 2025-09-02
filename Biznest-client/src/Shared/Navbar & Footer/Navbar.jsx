@@ -6,6 +6,20 @@ import logo from '../../assets/logo.png';
 const Navbar = () => {
     const { user, logOut } = useAuth();
 
+    // Function to get home route based on user type
+    const getHomeRoute = () => {
+        if (!user) return '/';
+        
+        switch (user.role?.type) {
+            case 'customer':
+                return '/customer-home';
+            case 'seller':
+                return '/seller-home';
+            default:
+                return '/';
+        }
+    };
+
     const handleLogout = async () => {
         try {
             await logOut();
@@ -20,7 +34,7 @@ const Navbar = () => {
                 <div className="flex items-center justify-between h-16">
                     {/* Logo and Brand */}
                     <div className="flex items-center space-x-3">
-                        <Link to="/" className="flex items-center space-x-3 hover:opacity-80 transition-opacity">
+                        <Link to={getHomeRoute()} className="flex items-center space-x-3 hover:opacity-80 transition-opacity">
                             <img 
                                 src={logo} 
                                 alt="BizNest Logo" 
@@ -35,14 +49,14 @@ const Navbar = () => {
                     {/* Navigation Menu */}
                     <div className="hidden md:flex items-center space-x-8">
                         <Link 
-                            to="/" 
+                            to={getHomeRoute()} 
                             className="text-gray-700 hover:text-amber-600 font-medium transition-colors"
                         >
                             Home
                         </Link>
                         
                         <Link 
-                            to="/products" 
+                            to="/allproducts" 
                             className="text-gray-700 hover:text-amber-600 font-medium transition-colors"
                         >
                             All Products
@@ -69,7 +83,7 @@ const Navbar = () => {
                         )}
                         
                         <Link 
-                            to="/help" 
+                            to="/help-nd-support" 
                             className="text-gray-700 hover:text-amber-600 font-medium transition-colors"
                         >
                             Help & Support

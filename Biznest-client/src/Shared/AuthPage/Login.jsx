@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import useAuth from '../Hooks/useAuth';
-import { PrimaryButton } from '../Components/Buttons';
-import logo from '../assets/logo.png';
+import useAuth from '../../Hooks/useAuth';
+import { PrimaryButton } from '../../Components/Buttons';
+import logo from '../../assets/logo.png';
 
 const Login = () => {
     const [formData, setFormData] = useState({

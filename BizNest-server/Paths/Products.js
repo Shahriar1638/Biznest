@@ -39,5 +39,43 @@ module.exports = (productCollection) => {
     }
   });
 
+// ----------------------------------------------> Get All Products <------------------------------
+  router.get('/allproducts', async (req, res) => {
+    try {
+      // Get all products from the collection
+      const allProducts = await productCollection.find({}).toArray();
+
+      res.status(200).json(allProducts);
+
+    } catch (error) {
+      console.error('Get all products error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Internal server error'
+      });
+    }
+  });
+
+// ----------------------------------------------> Get Products by Category <------------------------------
+  router.get('/:category', async (req, res) => {
+    try {
+      const { category } = req.params;
+      
+      // Get products filtered by category
+      const categoryProducts = await productCollection.find({ 
+        category: { $regex: new RegExp(category, 'i') } // Case-insensitive search
+      }).toArray();
+
+      res.status(200).json(categoryProducts);
+
+    } catch (error) {
+      console.error('Get products by category error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Internal server error'
+      });
+    }
+  });
+
   return router;
 };

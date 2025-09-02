@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import useAuth from '../Hooks/useAuth';
-import { PrimaryButton } from '../Components/Buttons';
-import logo from '../assets/logo.png';
+import useAuth from '../../Hooks/useAuth';
+import { PrimaryButton } from '../../Components/Buttons';
+import logo from '../../assets/logo.png';
 
 const PublicSignup = () => {
     const [formData, setFormData] = useState({
@@ -222,7 +222,6 @@ const PublicSignup = () => {
                                     <option value="">Select Gender</option>
                                     <option value="male">Male</option>
                                     <option value="female">Female</option>
-                                    <option value="other">Other</option>
                                 </select>
                             </div>
 
@@ -231,17 +230,21 @@ const PublicSignup = () => {
                                 <label htmlFor="roleType" className="block text-sm font-medium text-gray-700 mb-2">
                                     Account Type *
                                 </label>
-                                <select
-                                    id="roleType"
-                                    name="roleType"
-                                    value={formData.role.type}
-                                    onChange={handleChange}
-                                    className="input-biznest"
-                                    required
-                                >
-                                    <option value="customer">Customer</option>
-                                    <option value="seller">Seller</option>
-                                </select>
+                                <div className="relative">
+                                    <div className="absolute -inset-1 bg-gradient-to-r from-amber-400 via-orange-400 to-amber-400 rounded-lg opacity-75 animate-pulse"></div>
+                                    <select
+                                        id="roleType"
+                                        name="roleType"
+                                        value={formData.role.type}
+                                        onChange={handleChange}
+                                        className="input-biznest relative bg-white"
+                                        style={{ color: '#000000' }}
+                                        required
+                                    >
+                                        <option value="customer" style={{ color: '#000000' }}>Customer</option>
+                                        <option value="seller" style={{ color: '#000000' }}>Seller</option>
+                                    </select>
+                                </div>
                             </div>
 
                             {/* Profile URL */}

@@ -1,34 +1,10 @@
-import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import useAxiosPublic from '../../Hooks/useAxiosPublic';
 import { PrimaryButton, SecondaryButton, OutlineButton } from '../../Components/Buttons';
-import { FeatProductCard } from '../../Components/Cards';
+import HomeSearchBar from './HomeShared/HomeSearchBar';
+import HomeCategory from './HomeShared/HomeCategory';
+import HomeFeatured from './HomeShared/HomeFeatured';
 
 const DefaultHome = () => {
-    const [featuredProducts, setFeaturedProducts] = useState([]);
-    const [searchQuery, setSearchQuery] = useState('');
-    const [selectedCategory, setSelectedCategory] = useState('');
-    const [loading, setLoading] = useState(false);
-    const axiosPublic = useAxiosPublic();
-
-    // Fetch featured products
-    useEffect(() => {
-        const fetchFeaturedProducts = async () => {
-            try {
-                setLoading(true);
-                const response = await axiosPublic.get('/products/featured');
-                setFeaturedProducts(response.data || []);
-            } catch (error) {
-                console.error('Error fetching featured products:', error);
-                setFeaturedProducts([]);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchFeaturedProducts();
-    }, [axiosPublic]);
-
     // Categories with icons
     const categories = [
         { name: 'Groceries & Pantry', icon: '🛒', color: 'bg-green-100 text-green-700' },
@@ -42,16 +18,6 @@ const DefaultHome = () => {
         { name: 'Books, Stationery & Hobbies', icon: '📚', color: 'bg-emerald-100 text-emerald-700' },
         { name: 'Home & Garden', icon: '🌱', color: 'bg-lime-100 text-lime-700' }
     ];
-
-    const handleSearch = () => {
-        // Handle search functionality - navigate to products page with filters
-        const params = new URLSearchParams();
-        if (searchQuery) params.append('search', searchQuery);
-        if (selectedCategory) params.append('category', selectedCategory);
-        
-        // Navigate to products page with search params
-        window.location.href = `/products?${params.toString()}`;
-    };
 
     return (
         <div className="min-h-screen bg-white">
@@ -88,101 +54,19 @@ const DefaultHome = () => {
             </section>
 
             {/* Categories Highlight */}
-            <section className="py-16 px-4 bg-gray-50">
-                <div className="container mx-auto">
-                    <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
-                        Shop by Category
-                    </h2>
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
-                        {categories.map((category, index) => (
-                            <div 
-                                key={index}
-                                className="card-biznest p-6 text-center hover:scale-105 transition-transform cursor-pointer"
-                                onClick={() => setSelectedCategory(category.name)}
-                            >
-                                <div className={`w-16 h-16 mx-auto mb-4 rounded-full ${category.color} flex items-center justify-center text-2xl`}>
-                                    {category.icon}
-                                </div>
-                                <h3 className="font-medium text-gray-900 text-sm leading-tight">
-                                    {category.name}
-                                </h3>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </section>
+            <HomeCategory categories={categories} />
 
             {/* Search Bar + Categories */}
             <section id="explore-section" className="py-16 px-4 bg-white">
                 <div className="container mx-auto">
-                    <h2 className="text-3xl font-bold text-center text-gray-900 mb-8">
-                        Start Exploring Now
-                    </h2>
-                    <div className="max-w-4xl mx-auto">
-                        <div className="flex flex-col items-center md:flex-row gap-4 mb-6">
-                            <div className="flex-1">
-                                <input
-                                    type="text"
-                                    placeholder="Search for products, brands, or sellers..."
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="input-biznest w-full"
-                                    onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                                />
-                            </div>
-                            <div className="md:w-64">
-                                <select
-                                    value={selectedCategory}
-                                    onChange={(e) => setSelectedCategory(e.target.value)}
-                                    className="input-biznest w-full"
-                                    style={{ color: '#000' }}
-                                >
-                                    <option value="" style={{ color: '#000' }}>All Categories</option>
-                                    {categories.map((category, index) => (
-                                        <option key={index} value={category.name} style={{ color: '#000' }}>
-                                            {category.name}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-                            <PrimaryButton onClick={handleSearch} size="large">
-                                Search
-                            </PrimaryButton>
-                        </div>
-                    </div>
+                    <HomeSearchBar 
+                        categories={categories}
+                    />
                 </div>
             </section>
 
             {/* Featured Products */}
-            <section className="py-16 px-4 bg-gray-50">
-                <div className="container mx-auto">
-                    <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
-                        Featured Products
-                    </h2>
-                    
-                    {loading ? (
-                        <div className="text-center py-12">
-                            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-amber-600"></div>
-                            <p className="mt-4 text-gray-600">Loading featured products...</p>
-                        </div>
-                    ) : featuredProducts.length > 0 ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                            {featuredProducts.slice(0, 8).map((product) => (
-                                <FeatProductCard 
-                                    key={product.product_id} 
-                                    product={product}
-                                    showWishlist={true}
-                                    showAddToCart={true}
-                                />
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="text-center py-12">
-                            <p className="text-gray-600">No featured products available at the moment.</p>
-                        </div>
-                    )}
-                </div>
-            </section>
+            <HomeFeatured />
 
             {/* Why BizNest? */}
             <section className="py-16 px-4 bg-white">
