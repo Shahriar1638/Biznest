@@ -1,6 +1,7 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const { ObjectId } = require('mongodb');
 const router = express.Router();
 
 // Verify Token Middleware
@@ -35,6 +36,44 @@ module.exports = (userCollection) => {
           success: false, 
           message: 'User already exists with this email' 
         });
+      }
+      
+      //generate id for user
+      const userType = userinfo.role.type;
+      let generatedID = '';
+      
+      if (userType === 'customer') {
+        // Get the count of existing customers and generate next customerID
+        const customerCount = await userCollection.countDocuments({ "role.type": "customer" });
+        const nextCustomerNumber = customerCount + 1;
+        generatedID = `CUS${nextCustomerNumber.toString().padStart(3, '0')}`;
+        userinfo.role.details.customerID = generatedID;
+        
+        // Set default values if not provided
+        if (!userinfo.role.details.points) userinfo.role.details.points = 0;
+        if (!userinfo.role.details.wishlist) userinfo.role.details.wishlist = [];
+        
+      } else if (userType === 'seller') {
+        // Get the count of existing sellers and generate next sellerID
+        const sellerCount = await userCollection.countDocuments({ "role.type": "seller" });
+        const nextSellerNumber = sellerCount + 1;
+        generatedID = `SEL${nextSellerNumber.toString().padStart(3, '0')}`;
+        userinfo.role.details.sellerID = generatedID;
+        
+        // Set default values if not provided
+        if (!userinfo.role.details.revenue) userinfo.role.details.revenue = 0;
+        if (!userinfo.role.details.numOfApproved) userinfo.role.details.numOfApproved = 0;
+        if (!userinfo.role.details.numOfReject) userinfo.role.details.numOfReject = 0;
+        
+      } else if (userType === 'admin') {
+        // Get the count of existing admins and generate next adminID
+        const adminCount = await userCollection.countDocuments({ "role.type": "admin" });
+        const nextAdminNumber = adminCount + 1;
+        generatedID = `ADM${nextAdminNumber.toString().padStart(3, '0')}`;
+        userinfo.role.details.adminID = generatedID;
+        
+        // Set default values if not provided
+        if (!userinfo.role.details.salary) userinfo.role.details.salary = 0;
       }
       
       // Hash password
@@ -110,6 +149,38 @@ module.exports = (userCollection) => {
       res.status(500).json({ 
         success: false, 
         message: 'Internal server error' 
+      });
+    }
+  });
+  
+// ----------------------------------------------> Verify Token Endpoint <------------------------------
+  router.get('/verify-token', verifyToken, async (req, res) => {
+    try {
+      // If we reach here, token is valid (verifyToken middleware passed)
+      const userId = req.decoded._id;
+      console.log('Decoded user ID from token:', userId);
+      // Optionally, get fresh user data from database
+      const user = await userCollection.findOne({ _id: new ObjectId(userId) });
+      console.log(user);
+      if (!user) {
+        return res.status(404).json({
+          valid: false,
+          message: 'User not found'
+        });
+      }
+      
+      // Return success with user data
+      res.status(200).json({
+        valid: true,
+        message: 'Token is valid',
+        user
+      });
+      
+    } catch (error) {
+      console.error('Verify token error:', error);
+      res.status(500).json({
+        valid: false,
+        message: 'Internal server error'
       });
     }
   });

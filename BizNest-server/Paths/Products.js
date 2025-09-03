@@ -6,9 +6,12 @@ module.exports = (productCollection) => {
 // ----------------------------------------------> Featured Products (Top 8 Best Sellers) <------------------------------
   router.get('/featured', async (req, res) => {
     try {
-      // Get top 8 products sorted by sell_count.length in descending order
+      // Get top 8 released products sorted by sell_count.length in descending order
       const featuredProducts = await productCollection
         .aggregate([
+          {
+            $match: { product_status: "released" }
+          },
           {
             $addFields: {
               sellCountLength: { $size: { $ifNull: ["$sell_count", []] } }
@@ -49,6 +52,25 @@ module.exports = (productCollection) => {
 
     } catch (error) {
       console.error('Get all products error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Internal server error'
+      });
+    }
+  });
+
+// ----------------------------------------------> Get Released Products Only <------------------------------
+  router.get('/released-products', async (req, res) => {
+    try {
+      // Get all products with product_status: "released"
+      const releasedProducts = await productCollection.find({ 
+        product_status: "released" 
+      }).toArray();
+
+      res.status(200).json(releasedProducts);
+
+    } catch (error) {
+      console.error('Get released products error:', error);
       res.status(500).json({
         success: false,
         message: 'Internal server error'

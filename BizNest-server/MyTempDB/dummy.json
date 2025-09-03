@@ -1,0 +1,93 @@
+[
+    {
+        "email": "admin.user@example.com",
+        "role": {
+        "type": "admin",
+        "details": {
+            "adminID": "ADM001",
+            "salary": 75000
+        }
+        },
+        "username": "admin_user",
+        "password": "securePasswordAdmin123",
+        "phone_number": "111-222-3333",
+        "gender": "male",
+        "profileurl": "",
+        "address": "123 Admin Way, Control City, 10101",
+        "ban_status": false
+    },
+    {
+        "email": "john.doe@example.com",
+        "role": {
+        "type": "customer",
+        "details": {
+            "customerID": "CUS001",
+            "points": 150,
+            "wishlist": ["PRD011", "PRD015", "PRD019"]
+        }
+        },
+        "username": "johndoe",
+        "password": "passwordCustomer456",
+        "phone_number": "444-555-6666",
+        "gender": "male",
+        "profileurl": "",
+        "address": "456 Customer Lane, Shopper Town, 20202",
+        "ban_status": false
+    },
+    {
+        "email": "jane.smith@example.com",
+        "role": {
+        "type": "customer",
+        "details": {
+            "customerID": "CUS002",
+            "points": 320,
+            "wishlist": ["PRD016", "PRD022", "PRD025", "PRD031"]
+        }
+        },
+        "username": "janesmith",
+        "password": "passwordCustomer789",
+        "phone_number": "777-888-9999",
+        "gender": "female",
+        "profileurl": "",
+        "address": "789 Client Court, Buyer Village, 30303",
+        "ban_status": true
+    },
+    {
+        "email": "seller1@example.com",
+        "role": {
+        "type": "seller",
+        "details": {
+            "sellerID": "SEL001",
+            "revenue": 12500.50,
+            "numOfApproved": 210,
+            "numOfReject": 15
+        }
+        },
+        "username": "sellerone",
+        "password": "secureSellerPass001",
+        "phone_number": "123-456-7890",
+        "gender": "female",
+        "profileurl": "",
+        "address": "1 Vendor Street, Market City, 40404",
+        "ban_status": false
+    },
+    {
+        "email": "seller2@example.com",
+        "role": {
+        "type": "seller",
+        "details": {
+            "sellerID": "SEL002",
+            "revenue": 8750.75,
+            "numOfApproved": 150,
+            "numOfReject": 5
+        }
+        },
+        "username": "sellertwo",
+        "password": "secureSellerPass002",
+        "phone_number": "098-765-4321",
+        "gender": "male",
+        "profileurl": "",
+        "address": "2 Merchant Road, Trade Town, 50505",
+        "ban_status": false
+    }
+]
