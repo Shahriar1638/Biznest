@@ -34,9 +34,9 @@ const PublicSignup = () => {
                 role: {
                     ...formData.role,
                     type: value,
-                    details: value === 'customer' ? { points: 0 } : 
-                            value === 'seller' ? { revenue: 0, numOfApproved: 0, numOfReject: 0 } :
-                            { salary: 0 }
+                    details: value === 'customer' ? { customerID:'', points: 0, wishlist: [] } : 
+                            value === 'seller' ? { sellerID:'' ,revenue: 0, numOfApproved: 0, numOfReject: 0 } :
+                            { adminID:'',salary: 0 }
                 }
             });
         } else {
@@ -124,7 +124,7 @@ const PublicSignup = () => {
                             {/* Email */}
                             <div>
                                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                                    Email Address *
+                                    Email Address
                                 </label>
                                 <input
                                     id="email"
@@ -134,6 +134,7 @@ const PublicSignup = () => {
                                     onChange={handleChange}
                                     placeholder="Enter your email"
                                     className="input-biznest"
+                                    style={{ color: '#1f2937' }}
                                     required
                                 />
                             </div>
@@ -141,7 +142,7 @@ const PublicSignup = () => {
                             {/* Username */}
                             <div>
                                 <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
-                                    Username *
+                                    Username
                                 </label>
                                 <input
                                     id="username"
@@ -151,6 +152,7 @@ const PublicSignup = () => {
                                     onChange={handleChange}
                                     placeholder="Choose a username"
                                     className="input-biznest"
+                                    style={{ color: '#1f2937' }}
                                     required
                                 />
                             </div>
@@ -158,7 +160,7 @@ const PublicSignup = () => {
                             {/* Password */}
                             <div>
                                 <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                                    Password *
+                                    Password
                                 </label>
                                 <input
                                     id="password"
@@ -168,6 +170,7 @@ const PublicSignup = () => {
                                     onChange={handleChange}
                                     placeholder="Enter your password"
                                     className="input-biznest"
+                                    style={{ color: '#1f2937' }}
                                     required
                                 />
                             </div>
@@ -175,7 +178,7 @@ const PublicSignup = () => {
                             {/* Confirm Password */}
                             <div>
                                 <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
-                                    Confirm Password *
+                                    Confirm Password
                                 </label>
                                 <input
                                     id="confirmPassword"
@@ -185,6 +188,7 @@ const PublicSignup = () => {
                                     onChange={handleChange}
                                     placeholder="Confirm your password"
                                     className="input-biznest"
+                                    style={{ color: '#1f2937' }}
                                     required
                                 />
                             </div>
@@ -192,7 +196,7 @@ const PublicSignup = () => {
                             {/* Phone Number */}
                             <div>
                                 <label htmlFor="phone_number" className="block text-sm font-medium text-gray-700 mb-2">
-                                    Phone Number *
+                                    Phone Number
                                 </label>
                                 <input
                                     id="phone_number"
@@ -202,6 +206,7 @@ const PublicSignup = () => {
                                     onChange={handleChange}
                                     placeholder="123-456-7890"
                                     className="input-biznest"
+                                    style={{ color: '#1f2937' }}
                                     required
                                 />
                             </div>
@@ -209,7 +214,7 @@ const PublicSignup = () => {
                             {/* Gender */}
                             <div>
                                 <label htmlFor="gender" className="block text-sm font-medium text-gray-700 mb-2">
-                                    Gender *
+                                    Gender
                                 </label>
                                 <select
                                     id="gender"
@@ -217,6 +222,7 @@ const PublicSignup = () => {
                                     value={formData.gender}
                                     onChange={handleChange}
                                     className="input-biznest"
+                                    style={{ color: '#1f2937' }}
                                     required
                                 >
                                     <option value="">Select Gender</option>
@@ -228,7 +234,7 @@ const PublicSignup = () => {
                             {/* Role Type */}
                             <div>
                                 <label htmlFor="roleType" className="block text-sm font-medium text-gray-700 mb-2">
-                                    Account Type *
+                                    Account Type
                                 </label>
                                 <div className="relative">
                                     <div className="absolute -inset-1 bg-gradient-to-r from-amber-400 via-orange-400 to-amber-400 rounded-lg opacity-75 animate-pulse"></div>
@@ -238,11 +244,11 @@ const PublicSignup = () => {
                                         value={formData.role.type}
                                         onChange={handleChange}
                                         className="input-biznest relative bg-white"
-                                        style={{ color: '#000000' }}
+                                        style={{ color: '#1f2937' }}
                                         required
                                     >
-                                        <option value="customer" style={{ color: '#000000' }}>Customer</option>
-                                        <option value="seller" style={{ color: '#000000' }}>Seller</option>
+                                        <option value="customer" style={{ color: '#1f2937' }}>Customer</option>
+                                        <option value="seller" style={{ color: '#1f2937' }}>Seller</option>
                                     </select>
                                 </div>
                             </div>
@@ -260,6 +266,7 @@ const PublicSignup = () => {
                                     onChange={handleChange}
                                     placeholder="https://example.com/image.jpg"
                                     className="input-biznest"
+                                    style={{ color: '#1f2937' }}
                                 />
                             </div>
                         </div>
@@ -267,7 +274,7 @@ const PublicSignup = () => {
                         {/* Address */}
                         <div>
                             <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-2">
-                                Address *
+                                Address
                             </label>
                             <textarea
                                 id="address"
@@ -277,6 +284,7 @@ const PublicSignup = () => {
                                 placeholder="Enter your full address"
                                 rows="3"
                                 className="input-biznest resize-none"
+                                style={{ color: '#1f2937' }}
                                 required
                             />
                         </div>

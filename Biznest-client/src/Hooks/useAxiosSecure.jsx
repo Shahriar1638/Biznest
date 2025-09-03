@@ -3,8 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { useContext } from "react";
 import { AuthContext } from "../AuthProvider/AuthContext";
 
+// Get the API base URL from environment variables
+const apiBaseURL = import.meta.env.VITE_API_BASE_URL;
+
 const axiosSecure = axios.create({
-    baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
+    baseURL: apiBaseURL || 'http://localhost:3000'
 })
 const useAxiosSecure = () => {
 

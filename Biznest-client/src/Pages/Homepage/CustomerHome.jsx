@@ -7,6 +7,8 @@ import { PrimaryButton, SecondaryButton, OutlineButton } from '../../Components/
 import { FeatProductCard } from '../../Components/Cards';
 import HomeSearchBar from './HomeShared/HomeSearchBar';
 import HomeCategory from './HomeShared/HomeCategory';
+import OfferBannerSlider from './HomeShared/OfferBannerSlider';
+import HomeFeatured from './HomeShared/HomeFeatured';
 
 const CustomerHome = () => {
     const { user } = useAuth();
@@ -16,9 +18,7 @@ const CustomerHome = () => {
     // State management
     const [recommendedProducts, setRecommendedProducts] = useState([]);
     const [wishlistProducts, setWishlistProducts] = useState([]);
-    const [banners, setBanners] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [featuredBusiness, setFeaturedBusiness] = useState(null);
 
     // Categories with icons (reused from DefaultHome)
     const categories = [
@@ -40,21 +40,12 @@ const CustomerHome = () => {
             try {
                 setLoading(true);
                 
-                // Fetch recommended/trending products
-                const recommendedResponse = await axiosPublic.get('/products/trending');
-                setRecommendedProducts(recommendedResponse.data || []);
-                
                 // Fetch user's wishlist
                 const wishlistResponse = await axiosSecure.get('/user/wishlist');
                 setWishlistProducts(wishlistResponse.data || []);
-                
-                // Fetch promotional banners
-                const bannersResponse = await axiosPublic.get('/public/offers');
-                setBanners(bannersResponse.data || []);
-                
-                // Fetch featured business of the week
-                const businessResponse = await axiosPublic.get('/public/featured-weekly');
-                setFeaturedBusiness(businessResponse.data || null);
+
+                const recommendedResponse = await axiosPublic.get('/products/featured');
+                setRecommendedProducts(recommendedResponse.data || []);
                 
             } catch (error) {
                 console.error('Error fetching customer data:', error);
@@ -87,13 +78,16 @@ const CustomerHome = () => {
                         </PrimaryButton>
                         <SecondaryButton 
                             size="large" 
-                            className="!border-white !text-white hover:!bg-white hover:!text-amber-600 w-full sm:w-auto"
+                            className="!border-white !text-black hover:!bg-white hover:!text-amber-600 w-full sm:w-auto"
                         >
                             View My Orders
                         </SecondaryButton>
                     </div>
                 </div>
             </section>
+
+            {/* Offer Banners Slider */}
+            <OfferBannerSlider />
 
             {/* Quick Categories */}
             <HomeCategory categories={categories} />
@@ -108,73 +102,17 @@ const CustomerHome = () => {
                 </div>
             </section>
 
-            {/* Deals & Discounts */}
-            {banners.length > 0 && (
-                <section className="py-16 px-4 bg-gradient-to-r from-red-50 to-pink-50">
-                    <div className="container mx-auto">
-                        <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
-                            🔥 Hot Deals & Special Offers
-                        </h2>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {banners.slice(0, 6).map((banner, index) => (
-                                <div key={index} className="card-biznest overflow-hidden hover:scale-105 transition-transform cursor-pointer">
-                                    <img 
-                                        src={banner.imageUrl || banner.image} 
-                                        alt={banner.title}
-                                        className="w-full h-48 object-cover"
-                                    />
-                                    <div className="p-6">
-                                        <h3 className="text-xl font-bold text-gray-900 mb-2">{banner.title}</h3>
-                                        <p className="text-gray-600 mb-4">{banner.description}</p>
-                                        <div className="flex justify-between items-center">
-                                            <span className="text-2xl font-bold text-red-600">
-                                                {banner.discount || 'Special Offer'}
-                                            </span>
-                                            <PrimaryButton size="small">
-                                                Shop Now
-                                            </PrimaryButton>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </section>
-            )}
-
             {/* Recommended Products */}
-            <section className="py-16 px-4 bg-white">
-                <div className="container mx-auto">
-                    <h2 className="text-3xl font-bold text-center text-gray-900 mb-4">
-                        ✨ Just For You - Trending Products
-                    </h2>
-                    <p className="text-center text-gray-600 mb-12 max-w-2xl mx-auto">
-                        Discover what's popular in your area and trending among other shoppers
-                    </p>
-                    
-                    {loading ? (
-                        <div className="text-center py-12">
-                            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-amber-600"></div>
-                            <p className="mt-4 text-gray-600">Finding perfect products for you...</p>
-                        </div>
-                    ) : recommendedProducts.length > 0 ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                            {recommendedProducts.slice(0, 8).map((product) => (
-                                <FeatProductCard 
-                                    key={product.product_id} 
-                                    product={product}
-                                    showWishlist={true}
-                                    showAddToCart={true}
-                                />
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="text-center py-12">
-                            <p className="text-gray-600">Discovering trending products for you...</p>
-                        </div>
-                    )}
-                </div>
-            </section>
+            <HomeFeatured 
+                products={recommendedProducts}
+                loading={loading}
+                title="✨ Just For You - Trending Products"
+                description="Discover what's popular in your area and trending among other shoppers"
+                backgroundColor="bg-white"
+                maxProducts={8}
+                showWishlist={true}
+                showAddToCart={true}
+            />
 
             {/* Wishlist Section */}
             {wishlistProducts.length > 0 && (
@@ -201,42 +139,6 @@ const CustomerHome = () => {
                                     showAddToCart={true}
                                 />
                             ))}
-                        </div>
-                    </div>
-                </section>
-            )}
-
-            {/* Local Spotlight Section */}
-            {featuredBusiness && (
-                <section className="py-16 px-4 bg-green-50">
-                    <div className="container mx-auto">
-                        <h2 className="text-3xl font-bold text-center text-gray-900 mb-4">
-                            🌟 Featured Small Business of the Week
-                        </h2>
-                        <p className="text-center text-gray-600 mb-12 max-w-2xl mx-auto">
-                            Supporting local entrepreneurs and discovering community treasures
-                        </p>
-                        
-                        <div className="max-w-4xl mx-auto">
-                            <div className="card-biznest p-8 text-center">
-                                <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-green-100 flex items-center justify-center text-4xl">
-                                    {featuredBusiness.icon || '🏪'}
-                                </div>
-                                <h3 className="text-2xl font-bold text-gray-900 mb-4">
-                                    {featuredBusiness.name || 'Local Business Spotlight'}
-                                </h3>
-                                <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
-                                    {featuredBusiness.description || 'Discover amazing products from this week\'s featured local business and support your community!'}
-                                </p>
-                                <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                                    <PrimaryButton size="large">
-                                        Shop This Business
-                                    </PrimaryButton>
-                                    <OutlineButton size="large">
-                                        Learn More
-                                    </OutlineButton>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </section>

@@ -29,7 +29,7 @@ const Login = () => {
 
         try {
             await login(formData);
-            navigate('/');
+            navigate('/customer-home');
         } catch (err) {
             setError(err.response?.data?.message || 'Login failed');
         } finally {
@@ -89,6 +89,7 @@ const Login = () => {
                                 value={formData.email}
                                 onChange={handleChange}
                                 placeholder="Enter your email"
+                                style={{ color: '#1f2937' }}
                                 className="input-biznest"
                                 required
                                 autoComplete="email"
@@ -106,6 +107,7 @@ const Login = () => {
                                 value={formData.password}
                                 onChange={handleChange}
                                 placeholder="Enter your password"
+                                style={{ color: '#1f2937' }}
                                 className="input-biznest"
                                 required
                                 autoComplete="current-password"

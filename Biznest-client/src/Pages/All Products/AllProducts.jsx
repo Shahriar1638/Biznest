@@ -29,7 +29,7 @@ const AllProducts = () => {
     const fetchProducts = async (category = 'all') => {
         try {
             setLoading(true);
-            let endpoint = '/products/allproducts';
+            let endpoint = '/products/released-products';
             
             if (category !== 'all') {
                 endpoint = `/products/${encodeURIComponent(category)}`;

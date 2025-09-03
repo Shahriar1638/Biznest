@@ -16,12 +16,12 @@ const Authprovider = ({children}) => {
             if (token && savedUser) {
                 try {
                     // Verify token is still valid
-                    const response = await axiosPublic.get('/verify-token', {
+                    const response = await axiosPublic.get('/auth/verify-token', {
                         headers: {
                             authorization: `Bearer ${token}`
                         }
                     });
-                    
+                    console.log(response)
                     if (response.data.valid) {
                         setUser(JSON.parse(savedUser));
                     } else {
