@@ -29,10 +29,11 @@ async function run() {
     const userCollection = client.db("BiznestDB").collection("userinfos");
     const productCollection = client.db("BiznestDB").collection("products_collection");
     const cartCollection = client.db("BiznestDB").collection("cart_collection");
+    const paymentCollection = client.db("BiznestDB").collection("payments_details");
 
     const Authentications = require('./Paths/Auth')(userCollection);
     const productAPI = require('./Paths/Products')(productCollection);
-    const userAPI = require('./Paths/user')(cartCollection);
+    const userAPI = require('./Paths/user')(cartCollection, paymentCollection, productCollection, userCollection);
 
     app.use('/products', productAPI);
     app.use('/auth', Authentications);

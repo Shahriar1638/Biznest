@@ -1,7 +1,8 @@
 const express = require('express');
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const router = express.Router();
 
-module.exports = (cartCollection) => {
+module.exports = (cartCollection, paymentCollection, productCollection, userCollection) => {
 
 // ----------------------------------------------> Cart API Endpoint <------------------------------
   router.post('/cart', async (req, res) => {
@@ -262,6 +263,249 @@ module.exports = (cartCollection) => {
         success: false,
         message: 'Internal server error'
       });
+    }
+  });
+
+// ----------------------------------------------> Process Payment Endpoint <------------------------------
+  router.post('/process-payment', async (req, res) => {
+    try {
+      const paymentData = req.body;
+      console.log('Payment data received:', paymentData);
+      
+      // Extract payment method and amount for Stripe
+      const { paymentMethodId, payment_amount } = paymentData;
+      
+      if (!paymentMethodId) {
+        return res.status(400).json({
+          success: false,
+          message: 'Payment method is required'
+        });
+      }
+      
+      // 1. Loop through cart items and calculate prices
+      let calculatedTotal = 0;
+      if (paymentData.cartitems && paymentData.cartitems.length > 0) {
+        console.log('Processing cart items for price calculation...');
+        
+        for (let i = 0; i < paymentData.cartitems.length; i++) {
+          const cartItem = paymentData.cartitems[i];
+          console.log(`Processing item ${i + 1}: ProductID ${cartItem.productid}`);
+          
+          // 2. Search for corresponding product from product collection via productId
+          const product = await productCollection.findOne({ productId: cartItem.productid });
+          
+          if (product) {
+            console.log(`Product found: ${product.product_name}`);
+            
+            // 3. Find the unit details and calculate price with quantity
+            if (product.quantity_description && product.quantity_description.length > 0) {
+              // Find the specific unit by unitId
+              const unitDetails = product.quantity_description.find(
+                unit => unit.unitid === cartItem.unitId
+              );
+              
+              if (unitDetails && unitDetails.unit_price) {
+                // Calculate total price = unit_price * quantity
+                const totalPrice = unitDetails.unit_price * cartItem.quantity;
+                
+                // Subtract the purchased quantity from product's available quantity
+                const newUnitQuantity = unitDetails.unit_quantity - cartItem.quantity;
+                
+                // Set quantity to 0 if it would go below 0, don't go negative
+                const finalUnitQuantity = newUnitQuantity < 0 ? 0 : newUnitQuantity;
+                
+                // Update the product's unit quantity in the database
+                await productCollection.updateOne(
+                  { 
+                    productId: cartItem.productid,
+                    "quantity_description.unitid": cartItem.unitId
+                  },
+                  {
+                    $set: {
+                      "quantity_description.$.unit_quantity": finalUnitQuantity
+                    }
+                  }
+                );
+                
+                console.log(`Quantity updated for ${product.product_name}: ${unitDetails.unit_quantity} -> ${finalUnitQuantity}`);
+                if (newUnitQuantity < 0) {
+                  console.log(`Note: Quantity was set to 0 (would have been ${newUnitQuantity})`);
+                }
+                console.log(`Price calculated for ${product.product_name}: ${unitDetails.unit_price} x ${cartItem.quantity} = ${totalPrice}`);
+                
+                // Update seller's revenue
+                const sellerEmail = product.selleremail;
+                console.log(`Updating revenue for seller: ${sellerEmail}, adding: ${totalPrice}`);
+                
+                // Find the seller and update their revenue
+                const sellerUpdateResult = await userCollection.updateOne(
+                  { 
+                    email: sellerEmail,
+                    "role.type": "seller"
+                  },
+                  {
+                    $inc: {
+                      "role.details.revenue": totalPrice
+                    }
+                  }
+                );
+                
+                if (sellerUpdateResult.matchedCount > 0) {
+                  console.log(`Revenue updated successfully for seller: ${sellerEmail}`);
+                } else {
+                  console.log(`Warning: Seller not found or not a seller: ${sellerEmail}`);
+                }
+              } else {
+                console.log(`Unit details not found for unitId: ${cartItem.unitId} in product: ${cartItem.productid}`);
+                // Keep price as 0 if unit not found
+                paymentData.cartitems[i].price = 0;
+              }
+            } else {
+              console.log(`No quantity_description found for product: ${cartItem.productid}`);
+              paymentData.cartitems[i].price = 0;
+            }
+          } else {
+            console.log(`Product not found for productId: ${cartItem.productid}`);
+            // Keep price as 0 if product not found
+            paymentData.cartitems[i].price = 0;
+          }
+        }
+        
+        console.log('Updated cart items with calculated prices:', paymentData.cartitems);
+        console.log('Calculated total from products:', calculatedTotal);
+      }
+      
+      // Verify the calculated total matches the payment amount (optional validation)
+      const amountWithShipping = calculatedTotal + 50; // Adding shipping cost
+      if (Math.abs(amountWithShipping - payment_amount) > 0.01) {
+        console.log(`Warning: Amount mismatch. Calculated: ${amountWithShipping}, Received: ${payment_amount}`);
+      }
+      
+      // Process Stripe Payment
+      console.log('Creating Stripe payment intent...');
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: Math.round(payment_amount * 100), // Convert to cents
+        currency: 'bdt',
+        payment_method: paymentMethodId,
+        confirmation_method: 'manual',
+        confirm: true,
+        return_url: `${process.env.CLIENT_URL || 'http://localhost:5173'}/payment-success`,
+        metadata: {
+          orderID: paymentData.orderID,
+          customerEmail: paymentData.customer_email,
+          itemCount: paymentData.itemcount.toString()
+        }
+      });
+      
+      console.log('Stripe payment intent created:', paymentIntent.id);
+      
+      // Add payment processing timestamp
+      const currentDate = new Date();
+      const day = currentDate.getDate().toString().padStart(2, '0');
+      const month = (currentDate.getMonth() + 1).toString().padStart(2, '0');
+      const year = currentDate.getFullYear();
+      const formattedDate = `${day}-${month}-${year}`;
+      const timestamp = currentDate.toISOString();
+      
+      // Create payment record with all the data including Stripe information
+      const paymentRecord = {
+        ...paymentData,
+        payment_date: formattedDate,
+        payment_timestamp: timestamp,
+        payment_status: paymentIntent.status, // 'succeeded', 'requires_action', etc.
+        transaction_id: paymentIntent.id, // Main transaction ID for easy reference
+        stripe_payment_intent_id: paymentIntent.id,
+        stripe_payment_method_id: paymentMethodId,
+        calculated_total: calculatedTotal,
+        final_amount: payment_amount
+      };
+      
+      // Insert payment record into database
+      const result = await paymentCollection.insertOne(paymentRecord);
+      
+      // Handle different payment statuses
+      if (paymentIntent.status === 'succeeded') {
+        // Clear purchased items from cart after successful payment
+        console.log('Payment succeeded, removing purchased items from cart...');
+        
+        // Remove each purchased item from the customer's cart
+        for (const cartItem of paymentData.cartitems) {
+          const removeResult = await cartCollection.updateOne(
+            { customeremail: paymentData.customer_email },
+            {
+              $pull: {
+                cart_details: {
+                  productId: cartItem.productid
+                }
+              }
+            }
+          );
+          
+          if (removeResult.modifiedCount > 0) {
+            console.log(`Removed product ${cartItem.productid} from cart`);
+          } else {
+            console.log(`Product ${cartItem.productid} not found in cart or already removed`);
+          }
+        }
+        
+        // Check if cart is now empty and remove the entire cart document if needed
+        const updatedCart = await cartCollection.findOne({ customeremail: paymentData.customer_email });
+        if (updatedCart && updatedCart.cart_details.length === 0) {
+          await cartCollection.deleteOne({ customeremail: paymentData.customer_email });
+          console.log(`Cart completely cleared for customer: ${paymentData.customer_email}`);
+        }
+        
+        res.status(201).json({
+          success: true,
+          message: 'Payment processed successfully',
+          paymentId: result.insertedId,
+          transactionId: paymentIntent.id, // Return transaction ID to frontend
+          stripePaymentIntentId: paymentIntent.id,
+          paymentStatus: paymentIntent.status,
+          processedCartItems: paymentData.cartitems,
+          cartCleared: true,
+          result
+        });
+      } else if (paymentIntent.status === 'requires_action') {
+        res.status(200).json({
+          success: false,
+          requiresAction: true,
+          message: 'Payment requires additional authentication',
+          paymentIntentClientSecret: paymentIntent.client_secret,
+          paymentStatus: paymentIntent.status
+        });
+      } else {
+        res.status(400).json({
+          success: false,
+          message: 'Payment failed',
+          paymentStatus: paymentIntent.status,
+          error: paymentIntent.last_payment_error?.message || 'Unknown error'
+        });
+      }
+      
+    } catch (error) {
+      console.error('Process payment error:', error);
+      
+      // Handle Stripe-specific errors
+      if (error.type === 'StripeCardError') {
+        res.status(400).json({
+          success: false,
+          message: 'Card error: ' + error.message,
+          error_type: 'card_error'
+        });
+      } else if (error.type === 'StripeInvalidRequestError') {
+        res.status(400).json({
+          success: false,
+          message: 'Invalid request: ' + error.message,
+          error_type: 'invalid_request'
+        });
+      } else {
+        res.status(500).json({
+          success: false,
+          message: 'Internal server error during payment processing',
+          error: error.message
+        });
+      }
     }
   });
 
