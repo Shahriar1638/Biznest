@@ -26,8 +26,10 @@ const ShowCart = () => {
             return response.data.userCart;
         },
         enabled: !!user?.email,
-        staleTime: 5 * 60 * 1000, // 5 minutes
-        cacheTime: 10 * 60 * 1000, // 10 minutes
+        staleTime: 1, // Data is always considered stale
+        cacheTime: 5 * 60 * 1000, // 5 minutes cache
+        refetchOnWindowFocus: true, // Refetch when returning to the page
+        refetchOnMount: true, // Always refetch when component mounts
     });
 
     // Fetch all products to get product details
@@ -69,13 +71,17 @@ const ShowCart = () => {
     };
 
     // Handle quantity update
-    const handleQuantityUpdate = async (itemId, newQuantity) => {
+    const handleQuantityUpdate = async (cartItem, newQuantity) => {
+        console.log('Updating quantity for item:', cartItem, 'to new quantity:', newQuantity);
         if (newQuantity < 1) return;
         
         setIsUpdating(true);
         try {
-            await axiosSecure.patch(`/user/cart/${itemId}`, { 
-                unitquantity: newQuantity 
+            await axiosSecure.put('/user/cart/update-quantity', { 
+                customeremail: user.email,
+                unitid: cartItem.unitid,
+                productId: cartItem.productId,
+                newQuantity: newQuantity
             });
             
             // Refetch cart data
@@ -103,7 +109,7 @@ const ShowCart = () => {
     };
 
     // Handle remove item
-    const handleRemoveItem = async (itemId) => {
+    const handleRemoveItem = async (cartItem) => {
         const result = await Swal.fire({
             title: 'Remove Item?',
             text: 'Are you sure you want to remove this item from your cart?',
@@ -116,7 +122,13 @@ const ShowCart = () => {
 
         if (result.isConfirmed) {
             try {
-                await axiosSecure.delete(`/user/cart/${itemId}`);
+                await axiosSecure.delete('/user/cart/remove-item', {
+                    data: {
+                        customeremail: user.email,
+                        unitid: cartItem.unitid,
+                        productId: cartItem.productId
+                    }
+                });
                 
                 // Refetch cart data
                 refetch();
@@ -229,11 +241,11 @@ const ShowCart = () => {
                         {cartData.cart_details.map((item) => {
                             const productDetails = getProductDetails(item.productId);
                             const unitDetails = getUnitDetails(item.productId, item.unitid);
-                            const unitPrice = unitDetails?.unit_price || 0;
+                            const unitPrice = unitDetails.unit_price;
                             const totalItemPrice = unitPrice * item.unitquantity;
 
                             return (
-                            <div key={item._id} className="card-biznest p-6">
+                            <div key={`${item.productId}-${item.unitid}`} className="card-biznest p-6">
                                 <div className="flex items-start space-x-4">
                                     {/* Product Image */}
                                     <div className="w-20 h-20 bg-gray-200 rounded-lg flex items-center justify-center">
@@ -265,7 +277,7 @@ const ShowCart = () => {
                                             Category: {productDetails?.category}
                                         </p>
                                         <p className="text-xs text-gray-400">
-                                            Added: {new Date(item.added_date).toLocaleDateString()}
+                                            Added: {item.added_date}
                                         </p>
                                     </div>
 
@@ -281,7 +293,7 @@ const ShowCart = () => {
                                         {/* Quantity Controls */}
                                         <div className="flex items-center space-x-2 mb-3">
                                             <button
-                                                onClick={() => handleQuantityUpdate(item._id, item.unitquantity - 1)}
+                                                onClick={() => handleQuantityUpdate(item, item.unitquantity - 1)}
                                                 disabled={item.unitquantity <= 1 || isUpdating}
                                                 className="w-8 h-8 bg-amber-500 rounded border border-gray-300 flex items-center justify-center hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                                             >
@@ -291,7 +303,7 @@ const ShowCart = () => {
                                             </button>
                                             <span className="w-8 text-center font-medium text-black">{item.unitquantity}</span>
                                             <button
-                                                onClick={() => handleQuantityUpdate(item._id, item.unitquantity + 1)}
+                                                onClick={() => handleQuantityUpdate(item, item.unitquantity + 1)}
                                                 disabled={isUpdating}
                                                 className="w-8 h-8 bg-amber-500 rounded border border-gray-300 flex cursor-pointer items-center justify-center hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                                             >
@@ -303,7 +315,7 @@ const ShowCart = () => {
 
                                         {/* Remove Button */}
                                         <button
-                                            onClick={() => handleRemoveItem(item._id)}
+                                            onClick={() => handleRemoveItem(item)}
                                             className="text-red-600 hover:text-red-800 text-sm font-medium border-2 rounded-md px-2 py-1 border-amber-600 cursor-pointer"
                                         >
                                             Remove

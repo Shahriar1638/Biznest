@@ -22,20 +22,19 @@ module.exports = (cartCollection) => {
       const existingCart = await cartCollection.findOne({ customeremail });
       
       if (existingCart) {
-        // Check if product with same unitid already exists in cart
+        // Check if product with same productId already exists in cart
         const existingItemIndex = existingCart.cart_details.findIndex(
-          item => item.productId === productId && item.unitid === unitid
+          item => item.productId === productId
         );
-        
+        console.log('Existing item index:', existingItemIndex);
         if (existingItemIndex !== -1) {
-          // Product with same unitid exists, increment unitquantity
+          // Product exists, increment unitquantity
           const newQuantity = parseInt(existingCart.cart_details[existingItemIndex].unitquantity) + parseInt(unitquantity);
-          
+          console.log('New quantity:', newQuantity);
           const result = await cartCollection.updateOne(
             { 
               customeremail,
-              "cart_details.productId": productId,
-              "cart_details.unitid": unitid
+              "cart_details.productId": productId
             },
             {
               $set: {
@@ -134,6 +133,131 @@ module.exports = (cartCollection) => {
       
     } catch (error) {
       console.error('Get cart error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Internal server error'
+      });
+    }
+  });
+
+// ----------------------------------------------> Update Cart Item Quantity Endpoint <------------------------------
+  router.put('/cart/update-quantity', async (req, res) => {
+    try {
+      const { customeremail, productId, newQuantity } = req.body;
+      console.log('Update quantity request:', { customeremail, productId, newQuantity });
+      
+      // Validate newQuantity
+      if (!newQuantity || newQuantity <= 0) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid quantity. Quantity must be greater than 0'
+        });
+      }
+      
+      // Update current date
+      const currentDate = new Date();
+      const day = currentDate.getDate().toString().padStart(2, '0');
+      const month = (currentDate.getMonth() + 1).toString().padStart(2, '0');
+      const year = currentDate.getFullYear();
+      const formattedDate = `${day}-${month}-${year}`;
+      
+      console.log('new quantity:', newQuantity);
+      // Update the specific cart item quantity based on customeremail and productId only
+      const result = await cartCollection.updateOne(
+        { 
+          customeremail,
+          "cart_details.productId": productId
+        },
+        {
+          $set: {
+            "cart_details.$.unitquantity": parseInt(newQuantity),
+            "cart_details.$.added_date": formattedDate
+          }
+        }
+      );
+      
+      if (result.matchedCount === 0) {
+        return res.status(404).json({
+          success: false,
+          message: 'Cart item not found'
+        });
+      }
+      
+      if (result.modifiedCount === 0) {
+        return res.status(400).json({
+          success: false,
+          message: 'No changes made to cart item'
+        });
+      }
+      
+      res.status(200).json({
+        success: true,
+        message: 'Cart item quantity updated successfully',
+        result
+      });
+      
+    } catch (error) {
+      console.error('Update cart quantity error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Internal server error'
+      });
+    }
+  });
+
+// ----------------------------------------------> Remove Cart Item Endpoint <------------------------------
+  router.delete('/cart/remove-item', async (req, res) => {
+    try {
+      const { customeremail, productId } = req.body;
+      console.log('Remove item request:', { customeremail, productId });
+      
+      // Remove the specific cart item based on customeremail and productId only
+      const result = await cartCollection.updateOne(
+        { customeremail },
+        {
+          $pull: {
+            cart_details: {
+              productId: productId
+            }
+          }
+        }
+      );
+      
+      if (result.matchedCount === 0) {
+        return res.status(404).json({
+          success: false,
+          message: 'Cart not found for this customer'
+        });
+      }
+      
+      if (result.modifiedCount === 0) {
+        return res.status(404).json({
+          success: false,
+          message: 'Cart item not found'
+        });
+      }
+      
+      // Check if cart is now empty and optionally remove the entire cart document
+      const updatedCart = await cartCollection.findOne({ customeremail });
+      if (updatedCart && updatedCart.cart_details.length === 0) {
+        // Optionally remove the entire cart document if empty
+        await cartCollection.deleteOne({ customeremail });
+        
+        return res.status(200).json({
+          success: true,
+          message: 'Cart item removed successfully. Cart was empty so it was deleted.',
+          cartDeleted: true
+        });
+      }
+      
+      res.status(200).json({
+        success: true,
+        message: 'Cart item removed successfully',
+        result
+      });
+      
+    } catch (error) {
+      console.error('Remove cart item error:', error);
       res.status(500).json({
         success: false,
         message: 'Internal server error'

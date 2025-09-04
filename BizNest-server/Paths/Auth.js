@@ -25,7 +25,7 @@ module.exports = (userCollection) => {
   router.post('/signup', async (req, res) => {
     try {
       const userinfo = req.body;
-      console.log(userinfo);
+      // console.log(userinfo);
       const email = userinfo.email;
       const password = userinfo.password;
       
@@ -107,7 +107,7 @@ module.exports = (userCollection) => {
   router.post('/login', async (req, res) => {
     try {
       const authinfo = req.body;
-      console.log(authinfo);
+      // console.log(authinfo);
       const { email, password } = authinfo;
       
       // Find user by email
@@ -158,10 +158,10 @@ module.exports = (userCollection) => {
     try {
       // If we reach here, token is valid (verifyToken middleware passed)
       const userId = req.decoded._id;
-      console.log('Decoded user ID from token:', userId);
+      // console.log('Decoded user ID from token:', userId);
       // Optionally, get fresh user data from database
       const user = await userCollection.findOne({ _id: new ObjectId(userId) });
-      console.log(user);
+      // console.log(user);
       if (!user) {
         return res.status(404).json({
           valid: false,
