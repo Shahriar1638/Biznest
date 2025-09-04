@@ -10,6 +10,7 @@ import Help_nd_Support from "../Pages/Help_nd_Support/Help_nd_Support";
 import AllProducts from "../Pages/All Products/AllProducts";
 import Profile from "../Pages/Profile/profile";
 import ShowCart from "../Pages/Cart/ShowCart/ShowCart";
+import ProcessPayment from "../Pages/Cart/ProcessPayment/ProcessPayment";
 
 const Routes = createBrowserRouter([
     {
@@ -44,6 +45,10 @@ const Routes = createBrowserRouter([
             {
                 path: "/cart",
                 element: <ShowCart />
+            },
+            {
+                path: "/payment",
+                element: <ProcessPayment />
             }
 
         ]

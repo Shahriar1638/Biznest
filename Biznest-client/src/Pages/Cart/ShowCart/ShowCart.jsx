@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import useAuth from '../../../Hooks/useAuth';
 import useAxiosSecure from '../../../Hooks/useAxiosSecure';
 import { useQuery } from '@tanstack/react-query';
@@ -9,6 +9,7 @@ import Swal from 'sweetalert2';
 const ShowCart = () => {
     const { user } = useAuth();
     const axiosSecure = useAxiosSecure();
+    const navigate = useNavigate();
     const [isUpdating, setIsUpdating] = useState(false);
 
     // Fetch cart data using TanStack Query
@@ -164,9 +165,15 @@ const ShowCart = () => {
             return;
         }
 
-        // Navigate to checkout with all cart items
-        console.log('Proceeding to checkout with all cart items:', cartData.cart_details);
-        // You can navigate to checkout page here
+        // Navigate to payment page with cart data
+        console.log('Proceeding to payment with cart items:', cartData.cart_details);
+        navigate('/payment', { 
+            state: { 
+                cartData: cartData.cart_details,
+                totalAmount: calculateTotal() + 50, // Including shipping
+                userEmail: user.email
+            } 
+        });
     };
 
     // Loading state
@@ -334,16 +341,16 @@ const ShowCart = () => {
                             
                             <div className="space-y-3 mb-6">
                                 <div className="flex justify-between">
-                                    <span className="text-gray-600">Total Items:</span>
-                                    <span className="font-medium">{cartData.cart_details.length}</span>
+                                    <span className="text-gray-700">Total Items:</span>
+                                    <span className="font-medium text-gray-600 ">{cartData.cart_details.length}</span>
                                 </div>
                                 <div className="flex justify-between">
-                                    <span className="text-gray-600">Subtotal:</span>
-                                    <span className="font-medium">৳{calculateTotal().toLocaleString()}</span>
+                                    <span className="text-gray-700">Subtotal:</span>
+                                    <span className="font-medium text-gray-600">৳{calculateTotal().toLocaleString()}</span>
                                 </div>
                                 <div className="flex justify-between">
-                                    <span className="text-gray-600">Shipping:</span>
-                                    <span className="font-medium">৳50</span>
+                                    <span className="text-gray-700">Shipping:</span>
+                                    <span className="font-medium text-gray-600">৳50</span>
                                 </div>
                                 <hr className="border-gray-200" />
                                 <div className="flex justify-between text-lg font-semibold">
@@ -358,7 +365,7 @@ const ShowCart = () => {
                                     disabled={!cartData?.cart_details || cartData.cart_details.length === 0}
                                     className="w-full"
                                 >
-                                    Proceed to Checkout ({cartData.cart_details.length})
+                                    Proceed to Payment ({cartData.cart_details.length})
                                 </PrimaryButton>
                                 
                                 <Link to="/allproducts">
