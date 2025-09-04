@@ -8,6 +8,8 @@ import SellerHome from "../Pages/Homepage/SellerHome";
 import DefaultHome from "../Pages/Homepage/DefaultHome";
 import Help_nd_Support from "../Pages/Help_nd_Support/Help_nd_Support";
 import AllProducts from "../Pages/All Products/AllProducts";
+import Profile from "../Pages/Profile/profile";
+import ShowCart from "../Pages/Cart/ShowCart/ShowCart";
 
 const Routes = createBrowserRouter([
     {
@@ -34,6 +36,14 @@ const Routes = createBrowserRouter([
             {
                 path: "/allproducts",
                 element: <AllProducts />
+            },
+            {
+                path: "/profile",
+                element: <Profile />
+            },
+            {
+                path: "/cart",
+                element: <ShowCart />
             }
 
         ]

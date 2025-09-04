@@ -28,12 +28,15 @@ async function run() {
 
     const userCollection = client.db("BiznestDB").collection("userinfos");
     const productCollection = client.db("BiznestDB").collection("products_collection");
+    const cartCollection = client.db("BiznestDB").collection("cart_collection");
 
     const Authentications = require('./Paths/Auth')(userCollection);
     const productAPI = require('./Paths/Products')(productCollection);
+    const userAPI = require('./Paths/user')(cartCollection);
 
     app.use('/products', productAPI);
     app.use('/auth', Authentications);
+    app.use('/user', userAPI);
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });

@@ -2,10 +2,23 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Rating from 'react-rating';
 import { PrimaryButton, SecondaryButton } from '../Buttons';
+import { AddToCart } from '../../Pages/All Products/AddtoCart';
 
 const CustomerCard = ({ product, showWishlist = true, showAddToCart = true }) => {
     const [isWishlisted, setIsWishlisted] = useState(false);
     const [selectedQuantity, setSelectedQuantity] = useState('');
+
+    // Initialize AddToCart hook
+    const addToCartHook = AddToCart({ 
+        product, 
+        selectedQuantity,
+        onSuccess: (userCart) => {
+            console.log('Successfully added to cart:', userCart);
+        },
+        onError: (error) => {
+            console.error('Add to cart error:', error);
+        }
+    });
 
     const handleWishlistToggle = (e) => {
         e.preventDefault();
@@ -17,12 +30,7 @@ const CustomerCard = ({ product, showWishlist = true, showAddToCart = true }) =>
     const handleAddToCart = (e) => {
         e.preventDefault();
         e.stopPropagation();
-        if (!selectedQuantity) {
-            alert('Please select a quantity option');
-            return;
-        }
-        // Add to cart API call here
-        console.log('Adding to cart:', { product: product.productId, quantity: selectedQuantity });
+        addToCartHook.handleAddToCart();
     };
 
     const handleQuantityChange = (e) => {

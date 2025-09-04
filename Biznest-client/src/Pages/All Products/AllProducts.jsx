@@ -1,14 +1,19 @@
-import { useState, useEffect } from 'react';
-import useAxiosPublic from '../../Hooks/useAxiosPublic';
+import { useState } from 'react';
+import { useProducts } from '../../Hooks/useProducts';
 import { CustomerCard } from '../../Components/Cards';
 import { PrimaryButton, OutlineButton } from '../../Components/Buttons';
 
 const AllProducts = () => {
-    const [products, setProducts] = useState([]);
-    const [loading, setLoading] = useState(true);
     const [selectedCategory, setSelectedCategory] = useState('all');
     const [sidebarOpen, setSidebarOpen] = useState(false);
-    const axiosPublic = useAxiosPublic();
+
+    // TanStack Query for fetching products using custom hook
+    const {
+        data: products = [],
+        isLoading: loading,
+        error,
+        refetch
+    } = useProducts(selectedCategory);
 
     // Categories list
     const categories = [
@@ -25,50 +30,11 @@ const AllProducts = () => {
         { id: 'Home & Garden', name: 'Home & Garden', icon: '🌱' }
     ];
 
-    // Fetch products based on category
-    const fetchProducts = async (category = 'all') => {
-        try {
-            setLoading(true);
-            let endpoint = '/products/released-products';
-            
-            if (category !== 'all') {
-                endpoint = `/products/${encodeURIComponent(category)}`;
-            }
-            
-            const response = await axiosPublic.get(endpoint);
-            setProducts(response.data || []);
-        } catch (error) {
-            console.error('Error fetching products:', error);
-            setProducts([]);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    // Handle category selection
+    // Handle category selection - this will trigger a new query
     const handleCategorySelect = (categoryId) => {
         setSelectedCategory(categoryId);
-        fetchProducts(categoryId);
         setSidebarOpen(false); // Close sidebar on mobile after selection
     };
-
-    // Initial load
-    useEffect(() => {
-        const fetchInitialProducts = async () => {
-            try {
-                setLoading(true);
-                const response = await axiosPublic.get('/products/allproducts');
-                setProducts(response.data || []);
-            } catch (error) {
-                console.error('Error fetching products:', error);
-                setProducts([]);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchInitialProducts();
-    }, [axiosPublic]);
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -149,14 +115,27 @@ const AllProducts = () => {
                                 </p>
                             </div>
                             
-                            {/* View Toggle (Future feature) */}
-                            <div className="hidden sm:flex items-center space-x-2">
-                                <OutlineButton size="small">
-                                    <i className="fas fa-th-large"></i>
-                                </OutlineButton>
-                                <OutlineButton size="small">
-                                    <i className="fas fa-list"></i>
-                                </OutlineButton>
+                            {/* Actions */}
+                            <div className="flex items-center space-x-3">
+                                {/* Refresh Button */}
+                                <button
+                                    onClick={() => refetch()}
+                                    disabled={loading}
+                                    className="p-2 text-gray-600 hover:text-amber-600 transition-colors disabled:opacity-50"
+                                    title="Refresh products"
+                                >
+                                    <i className={`fas fa-sync-alt ${loading ? 'animate-spin' : ''}`}></i>
+                                </button>
+                                
+                                {/* View Toggle (Future feature) */}
+                                <div className="hidden sm:flex items-center space-x-2">
+                                    <OutlineButton size="small">
+                                        <i className="fas fa-th-large"></i>
+                                    </OutlineButton>
+                                    <OutlineButton size="small">
+                                        <i className="fas fa-list"></i>
+                                    </OutlineButton>
+                                </div>
                             </div>
                         </div>
 
@@ -165,6 +144,20 @@ const AllProducts = () => {
                             <div className="text-center py-16">
                                 <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600 mb-4"></div>
                                 <p className="text-gray-600">Loading amazing products for you...</p>
+                            </div>
+                        ) : error ? (
+                            <div className="text-center py-16">
+                                <div className="text-6xl mb-4">⚠️</div>
+                                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                                    Oops! Something went wrong
+                                </h3>
+                                <p className="text-gray-600 mb-6">
+                                    We couldn't load the products. Please try again.
+                                </p>
+                                <PrimaryButton onClick={() => refetch()}>
+                                    <i className="fas fa-refresh mr-2"></i>
+                                    Try Again
+                                </PrimaryButton>
                             </div>
                         ) : products.length > 0 ? (
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">

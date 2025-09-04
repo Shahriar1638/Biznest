@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Rating from 'react-rating';
 import { PrimaryButton, OutlineButton } from '../Buttons';
+import { AddToCart } from '../../Pages/All Products/AddtoCart';
 
 const FeatProductCard = ({ product, showWishlist = true, showAddToCart = true }) => {
     const [isWishlisted, setIsWishlisted] = useState(false);
@@ -30,6 +31,18 @@ const FeatProductCard = ({ product, showWishlist = true, showAddToCart = true })
         ? description 
         : description.substring(0, maxDescriptionLength);
 
+    // Initialize AddToCart hook
+    const addToCartHook = AddToCart({ 
+        product, 
+        selectedQuantity,
+        onSuccess: (userCart) => {
+            console.log('Successfully added to cart from featured product:', userCart);
+        },
+        onError: (error) => {
+            console.error('Add to cart error from featured product:', error);
+        }
+    });
+
     // Handle wishlist toggle
     const handleWishlistClick = (e) => {
         e.preventDefault();
@@ -42,8 +55,7 @@ const FeatProductCard = ({ product, showWishlist = true, showAddToCart = true })
     const handleAddToCart = (e) => {
         e.preventDefault();
         e.stopPropagation();
-        // TODO: Implement actual add to cart functionality
-        console.log('Added to cart:', product.productId);
+        addToCartHook.handleAddToCart();
     };
 
     // Handle image error

@@ -1,8 +1,6 @@
-import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import useAxiosSecure from '../../Hooks/useAxiosSecure';
-import useAxiosPublic from '../../Hooks/useAxiosPublic';
 import useAuth from '../../Hooks/useAuth';
+import { useFeaturedProducts, useWishlist } from '../../Hooks/useProducts';
 import { PrimaryButton, SecondaryButton, OutlineButton } from '../../Components/Buttons';
 import { FeatProductCard } from '../../Components/Cards';
 import HomeSearchBar from './HomeShared/HomeSearchBar';
@@ -12,13 +10,20 @@ import HomeFeatured from './HomeShared/HomeFeatured';
 
 const CustomerHome = () => {
     const { user } = useAuth();
-    const axiosSecure = useAxiosSecure();
-    const axiosPublic = useAxiosPublic();
     
-    // State management
-    const [recommendedProducts, setRecommendedProducts] = useState([]);
-    const [wishlistProducts, setWishlistProducts] = useState([]);
-    const [loading, setLoading] = useState(true);
+    // TanStack Query hooks for data fetching
+    const {
+        data: recommendedProducts = [],
+        isLoading: recommendedLoading
+    } = useFeaturedProducts();
+
+    const {
+        data: wishlistProducts = [],
+        isLoading: wishlistLoading
+    } = useWishlist();
+
+    // Combined loading state
+    const loading = recommendedLoading || wishlistLoading;
 
     // Categories with icons (reused from DefaultHome)
     const categories = [
@@ -33,29 +38,6 @@ const CustomerHome = () => {
         { name: 'Books, Stationery & Hobbies', icon: '📚', color: 'bg-emerald-100 text-emerald-700' },
         { name: 'Home & Garden', icon: '🌱', color: 'bg-lime-100 text-lime-700' }
     ];
-
-    // Fetch data on component mount
-    useEffect(() => {
-        const fetchCustomerData = async () => {
-            try {
-                setLoading(true);
-                
-                // Fetch user's wishlist
-                const wishlistResponse = await axiosSecure.get('/user/wishlist');
-                setWishlistProducts(wishlistResponse.data || []);
-
-                const recommendedResponse = await axiosPublic.get('/products/featured');
-                setRecommendedProducts(recommendedResponse.data || []);
-                
-            } catch (error) {
-                console.error('Error fetching customer data:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchCustomerData();
-    }, [axiosSecure, axiosPublic]);
 
     return (
         <div className="min-h-screen bg-gray-50">

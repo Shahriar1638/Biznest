@@ -28,8 +28,27 @@ const Login = () => {
         setIsLoading(true);
 
         try {
-            await login(formData);
-            navigate('/customer-home');
+            const user = await login(formData);
+            
+            // Navigate based on user role
+            if (user && user.role) {
+                switch (user.role.type) {
+                    case 'admin':
+                        navigate('/admin-home');
+                        break;
+                    case 'seller':
+                        navigate('/seller-home');
+                        break;
+                    case 'customer':
+                        navigate('/customer-home');
+                        break;
+                    default:
+                        navigate('/'); // Default home page
+                }
+            } else {
+                // Fallback if no role information
+                navigate('/');
+            }
         } catch (err) {
             setError(err.response?.data?.message || 'Login failed');
         } finally {
