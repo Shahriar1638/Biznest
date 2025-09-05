@@ -2,6 +2,7 @@ import { useState } from 'react';
 import useAuth from '../../Hooks/useAuth';
 import { AdminInfo, CustomerInfo, SellerInfo } from './UniqueInfos';
 import { PrimaryButton, SecondaryButton } from '../../Components/Buttons';
+import PaymentHistory from './Extra infos/PaymentHistory';
 
 const Profile = () => {
     const { user } = useAuth();
@@ -198,6 +199,11 @@ const Profile = () => {
 
                     {/* Role-Specific Information */}
                     {renderUniqueInfo()}
+
+                    {/* Payment History - Only for Customers */}
+                    {user.role?.type === 'customer' && (
+                        <PaymentHistory />
+                    )}
 
                     {/* Action Buttons */}
                     <div className="card-biznest p-6">

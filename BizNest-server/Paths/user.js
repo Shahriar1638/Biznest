@@ -509,5 +509,41 @@ module.exports = (cartCollection, paymentCollection, productCollection, userColl
     }
   });
 
+// ----------------------------------------------> Get Payment History Endpoint <------------------------------
+  router.get('/paymenthistory/:email', async (req, res) => {
+    try {
+      const customerEmail = req.params.email;
+      console.log('Fetching payment history for user:', customerEmail);
+      
+      // Find all payments for this customer, sorted by date (newest first)
+      const paymentHistory = await paymentCollection.find({ 
+        customer_email: customerEmail 
+      }).sort({ payment_timestamp: -1 }).toArray();
+      
+      if (!paymentHistory || paymentHistory.length === 0) {
+        return res.status(200).json({
+          success: true,
+          message: 'No payment history found for this user',
+          payments: []
+        });
+      }
+      
+      // Return the payment history
+      res.status(200).json({
+        success: true,
+        message: 'Payment history fetched successfully',
+        payments: paymentHistory,
+        totalOrders: paymentHistory.length
+      });
+      
+    } catch (error) {
+      console.error('Get payment history error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Internal server error'
+      });
+    }
+  });
+
   return router;
 };

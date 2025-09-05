@@ -60,6 +60,18 @@ const ShowCart = () => {
         return product.quantity_description.find(unit => unit.unitid === unitid);
     };
 
+    // Helper function to check if an item is out of stock
+    const isItemOutOfStock = (cartItem) => {
+        const unitDetails = getUnitDetails(cartItem.productId, cartItem.unitid);
+        return unitDetails?.unit_quantity === 0;
+    };
+
+    // Helper function to check if any item in cart is out of stock
+    const hasOutOfStockItems = () => {
+        if (!cartData?.cart_details) return false;
+        return cartData.cart_details.some(item => isItemOutOfStock(item));
+    };
+
     // Calculate total price for all items
     const calculateTotal = () => {
         if (!cartData?.cart_details || !allProducts) return 0;
@@ -283,9 +295,18 @@ const ShowCart = () => {
                                         <p className="text-xs text-gray-400 mb-1">
                                             Category: {productDetails?.category}
                                         </p>
-                                        <p className="text-xs text-gray-400">
+                                        <p className="text-xs text-gray-400 mb-2">
                                             Added: {item.added_date}
                                         </p>
+                                        {/* Stock Status */}
+                                        {isItemOutOfStock(item) && (
+                                            <div className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                                <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                                                </svg>
+                                                Out of Stock
+                                            </div>
+                                        )}
                                     </div>
 
                                     {/* Price and Quantity */}
@@ -360,12 +381,29 @@ const ShowCart = () => {
                             </div>
 
                             <div className="space-y-3">
+                                {/* Show warning if items are out of stock */}
+                                {hasOutOfStockItems() && (
+                                    <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                                        <div className="flex items-center">
+                                            <svg className="w-5 h-5 text-red-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                                            </svg>
+                                            <p className="text-sm text-red-800">
+                                                Some items are out of stock. Please remove them to proceed.
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
+                                
                                 <PrimaryButton 
                                     onClick={handleCheckout}
-                                    disabled={!cartData?.cart_details || cartData.cart_details.length === 0}
+                                    disabled={!cartData?.cart_details || cartData.cart_details.length === 0 || hasOutOfStockItems()}
                                     className="w-full"
                                 >
-                                    Proceed to Payment ({cartData.cart_details.length})
+                                    {hasOutOfStockItems() 
+                                        ? 'Cannot Proceed - Items Out of Stock'
+                                        : `Proceed to Payment (${cartData.cart_details.length})`
+                                    }
                                 </PrimaryButton>
                                 
                                 <Link to="/allproducts">
