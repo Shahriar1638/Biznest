@@ -1,5 +1,6 @@
 import { createBrowserRouter } from "react-router-dom";
 import Layout from "../Layout/Layout";
+import DashboardLayout from "../Layout/DashboardLayout";
 import ErrorPage from "../ErrorPage/ErrorPage";
 import Login from "../Shared/AuthPage/Login";
 import PublicSignup from "../Shared/AuthPage/PublicSignup";
@@ -11,6 +12,8 @@ import AllProducts from "../Pages/All Products/AllProducts";
 import Profile from "../Pages/Profile/profile";
 import ShowCart from "../Pages/Cart/ShowCart/ShowCart";
 import ProcessPayment from "../Pages/Cart/ProcessPayment/ProcessPayment";
+import MyProducts from "../Pages/Dashboards/SellerDashboard/MyProductsList/Myproducts";
+import AddProducts from "../Pages/Dashboards/SellerDashboard/AddProducts/Addproducts";
 
 const Routes = createBrowserRouter([
     {
@@ -51,6 +54,25 @@ const Routes = createBrowserRouter([
                 element: <ProcessPayment />
             }
 
+        ]
+    },
+    {
+        path: "/dashboard",
+        element: <DashboardLayout />,
+        errorElement: <ErrorPage />,
+        children: [
+            {
+                path: "/dashboard",
+                element: <MyProducts />
+            },
+            {
+                path: "/dashboard/seller/products",
+                element: <MyProducts />
+            },
+            {
+                path: "/dashboard/seller/add-product",
+                element: <AddProducts />
+            }
         ]
     },
     {

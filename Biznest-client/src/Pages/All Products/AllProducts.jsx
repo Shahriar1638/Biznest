@@ -2,10 +2,15 @@ import { useState } from 'react';
 import { useProducts } from '../../Hooks/useProducts';
 import { CustomerCard } from '../../Components/Cards';
 import { PrimaryButton, OutlineButton } from '../../Components/Buttons';
+import useAuth from '../../Hooks/useAuth';
 
 const AllProducts = () => {
+    const { user } = useAuth();
     const [selectedCategory, setSelectedCategory] = useState('all');
     const [sidebarOpen, setSidebarOpen] = useState(false);
+
+    // Check if current user is a seller
+    const isSeller = user?.role?.type === 'seller';
 
     // TanStack Query for fetching products using custom hook
     const {
@@ -165,8 +170,8 @@ const AllProducts = () => {
                                     <CustomerCard 
                                         key={product.product_id || product.productId} 
                                         product={product}
-                                        showWishlist={true}
-                                        showAddToCart={true}
+                                        showWishlist={!isSeller}
+                                        showAddToCart={!isSeller}
                                     />
                                 ))}
                             </div>

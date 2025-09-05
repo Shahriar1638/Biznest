@@ -34,10 +34,12 @@ async function run() {
     const Authentications = require('./Paths/Auth')(userCollection);
     const productAPI = require('./Paths/Products')(productCollection);
     const userAPI = require('./Paths/user')(cartCollection, paymentCollection, productCollection, userCollection);
+    const sellerAPI = require('./Paths/seller')(productCollection, userCollection);
 
     app.use('/products', productAPI);
     app.use('/auth', Authentications);
     app.use('/user', userAPI);
+    app.use('/seller', sellerAPI);
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
