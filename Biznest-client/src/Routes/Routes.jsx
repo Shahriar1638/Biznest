@@ -6,6 +6,7 @@ import Login from "../Shared/AuthPage/Login";
 import PublicSignup from "../Shared/AuthPage/PublicSignup";
 import CustomerHome from "../Pages/Homepage/CustomerHome";
 import SellerHome from "../Pages/Homepage/SellerHome";
+import AdminHome from "../Pages/Homepage/AdminHome";
 import DefaultHome from "../Pages/Homepage/DefaultHome";
 import Help_nd_Support from "../Pages/Help_nd_Support/Help_nd_Support";
 import AllProducts from "../Pages/All Products/AllProducts";
@@ -14,6 +15,9 @@ import ShowCart from "../Pages/Cart/ShowCart/ShowCart";
 import ProcessPayment from "../Pages/Cart/ProcessPayment/ProcessPayment";
 import MyProducts from "../Pages/Dashboards/SellerDashboard/MyProductsList/Myproducts";
 import AddProducts from "../Pages/Dashboards/SellerDashboard/AddProducts/Addproducts";
+import ALLProductsAdmin from "../Pages/Dashboards/AdminDashboard/All Prodcuts Admin/ALLProductsAdmin";
+import RegisterAdmin from "../Pages/Dashboards/AdminDashboard/RegisterAdmin/RegisterAdmin";
+import DashboardDefault from "../Pages/Dashboards/DashboardDefault";
 
 const Routes = createBrowserRouter([
     {
@@ -32,6 +36,10 @@ const Routes = createBrowserRouter([
             {
                 path: "/seller-home",
                 element: <SellerHome />
+            },
+            {
+                path: "/admin-home",
+                element: <AdminHome />
             },
             {
                 path: "/help-nd-support",
@@ -63,7 +71,7 @@ const Routes = createBrowserRouter([
         children: [
             {
                 path: "/dashboard",
-                element: <MyProducts />
+                element: <DashboardDefault />
             },
             {
                 path: "/dashboard/seller/products",
@@ -72,6 +80,14 @@ const Routes = createBrowserRouter([
             {
                 path: "/dashboard/seller/add-product",
                 element: <AddProducts />
+            },
+            {
+                path: "/dashboard/admin/products",
+                element: <ALLProductsAdmin />
+            },
+            {
+                path: "/dashboard/admin/register",
+                element: <RegisterAdmin />
             }
         ]
     },

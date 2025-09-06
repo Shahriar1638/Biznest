@@ -74,7 +74,7 @@ const Navbar = () => {
                         )}
                         
                         {/* Seller-specific navigation */}
-                        {user && user.role?.type === 'seller' && (
+                        {user && (user.role?.type === 'seller' || user.role?.type === 'admin') && (
                             <Link 
                                 to="/dashboard" 
                                 className="text-gray-700 hover:text-amber-600 font-medium transition-colors"

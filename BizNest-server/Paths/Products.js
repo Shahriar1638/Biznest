@@ -78,6 +78,42 @@ module.exports = (productCollection) => {
     }
   });
 
+// ----------------------------------------------> Get Products by Status Filter <------------------------------
+  router.get('/filter/:filter', async (req, res) => {
+    try {
+      const { filter } = req.params;
+      
+      // Validate filter parameter - should be one of: pending, rejected, released
+      const validFilters = ['pending', 'rejected', 'released'];
+      
+      if (!validFilters.includes(filter.toLowerCase())) {
+        return res.status(400).json({
+          success: false,
+          message: `Invalid filter. Valid filters are: ${validFilters.join(', ')}`
+        });
+      }
+      
+      // Get products filtered by product_status
+      const filteredProducts = await productCollection.find({ 
+        product_status: filter.toLowerCase()
+      }).toArray();
+
+      res.status(200).json({
+        success: true,
+        message: `${filter.charAt(0).toUpperCase() + filter.slice(1)} products fetched successfully`,
+        products: filteredProducts,
+        count: filteredProducts.length
+      });
+
+    } catch (error) {
+      console.error(`Get ${filter} products error:`, error);
+      res.status(500).json({
+        success: false,
+        message: 'Internal server error'
+      });
+    }
+  });
+
 // ----------------------------------------------> Get Products by Category <------------------------------
   router.get('/:category', async (req, res) => {
     try {

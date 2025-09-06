@@ -14,63 +14,16 @@ const Sidebar = ({ isOpen, onClose }) => {
     // Admin menu items
     const adminMenuItems = [
         {
-            title: 'Dashboard',
-            icon: 'fas fa-tachometer-alt',
-            path: '/admin/dashboard',
+            title: 'Product Management',
+            icon: 'fas fa-box',
+            path: '/dashboard/admin/products',
             children: []
         },
         {
-            title: 'User Management',
-            icon: 'fas fa-users',
-            path: '/admin/users',
-            children: [
-                { title: 'All Users', path: '/admin/users/all' },
-                { title: 'Customers', path: '/admin/users/customers' },
-                { title: 'Sellers', path: '/admin/users/sellers' },
-                { title: 'Banned Users', path: '/admin/users/banned' }
-            ]
-        },
-        {
-            title: 'Product Management',
-            icon: 'fas fa-box',
-            path: '/admin/products',
-            children: [
-                { title: 'All Products', path: '/admin/products/all' },
-                { title: 'Pending Approval', path: '/admin/products/pending' },
-                { title: 'Rejected Products', path: '/admin/products/rejected' },
-                { title: 'Categories', path: '/admin/categories' }
-            ]
-        },
-        {
-            title: 'Orders',
-            icon: 'fas fa-shopping-cart',
-            path: '/admin/orders',
-            children: [
-                { title: 'All Orders', path: '/admin/orders/all' },
-                { title: 'Pending Orders', path: '/admin/orders/pending' },
-                { title: 'Completed Orders', path: '/admin/orders/completed' },
-                { title: 'Cancelled Orders', path: '/admin/orders/cancelled' }
-            ]
-        },
-        {
-            title: 'Analytics',
-            icon: 'fas fa-chart-bar',
-            path: '/admin/analytics',
-            children: [
-                { title: 'Sales Report', path: '/admin/analytics/sales' },
-                { title: 'User Analytics', path: '/admin/analytics/users' },
-                { title: 'Product Performance', path: '/admin/analytics/products' }
-            ]
-        },
-        {
-            title: 'Financial',
-            icon: 'fas fa-dollar-sign',
-            path: '/admin/financial',
-            children: [
-                { title: 'Revenue', path: '/admin/financial/revenue' },
-                { title: 'Payments', path: '/admin/financial/payments' },
-                { title: 'Commissions', path: '/admin/financial/commissions' }
-            ]
+            title: 'Register Admin',
+            icon: 'fas fa-user-plus',
+            path: '/dashboard/admin/register',
+            children: []
         }
     ]
 
