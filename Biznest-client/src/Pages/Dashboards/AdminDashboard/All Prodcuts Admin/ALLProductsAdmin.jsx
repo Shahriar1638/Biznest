@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import useAxiosSecure from '../../../../Hooks/useAxiosSecure';
+import useAuth from '../../../../Hooks/useAuth';
 import Swal from 'sweetalert2';
 
 const ALLProductsAdmin = () => {
     const axiosSecure = useAxiosSecure();
+    const { user } = useAuth();
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedFilter, setSelectedFilter] = useState('all');
     const [selectedCategory, setSelectedCategory] = useState('all');
@@ -44,6 +46,17 @@ const ALLProductsAdmin = () => {
     // Handle product status change
     const handleStatusChange = async (productId, newStatus) => {
         try {
+            // Check if user is admin
+            if (!user || user.role?.type !== 'admin') {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Unauthorized',
+                    text: 'You must be an admin to perform this action.',
+                    confirmButtonColor: '#f59e0b'
+                });
+                return;
+            }
+
             const result = await Swal.fire({
                 title: 'Are you sure?',
                 text: `Change product status to ${newStatus}?`,
@@ -55,24 +68,49 @@ const ALLProductsAdmin = () => {
             });
 
             if (result.isConfirmed) {
-                // TODO: Implement API call to update product status
-                console.log('Update product status:', productId, newStatus);
-                
+                // Show loading state
                 Swal.fire({
-                    icon: 'success',
-                    title: 'Updated!',
-                    text: 'Product status has been updated.',
-                    confirmButtonColor: '#f59e0b'
+                    title: 'Updating...',
+                    text: 'Please wait while we update the product status.',
+                    icon: 'info',
+                    allowOutsideClick: false,
+                    showConfirmButton: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
                 });
-                
-                refetch();
+
+                // Make API call to update product status
+                const response = await axiosSecure.put('/admin/products/status', {
+                    productId: productId,
+                    status: newStatus,
+                    adminEmail: user.email
+                });
+
+                if (response.data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Updated!',
+                        text: response.data.message,
+                        confirmButtonColor: '#f59e0b'
+                    });
+                    
+                    // Refresh the products list
+                    refetch();
+                } else {
+                    throw new Error(response.data.message || 'Failed to update product status');
+                }
             }
         } catch (error) {
             console.error('Error updating product status:', error);
+            
+            // Extract error message
+            const errorMessage = error.response?.data?.message || error.message || 'Failed to update product status';
+            
             Swal.fire({
                 icon: 'error',
                 title: 'Error!',
-                text: 'Failed to update product status.',
+                text: errorMessage,
                 confirmButtonColor: '#f59e0b'
             });
         }
@@ -171,7 +209,7 @@ const ALLProductsAdmin = () => {
                             {/* Refresh Button */}
                             <button
                                 onClick={() => refetch()}
-                                className="p-2 text-gray-600 hover:text-amber-600 transition-colors"
+                                className="p-2 text-gray-600 hover:text-amber-600 transition-colors cursor-button"
                                 title="Refresh products"
                             >
                                 <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

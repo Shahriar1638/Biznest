@@ -215,6 +215,11 @@ const Profile = () => {
                             <SecondaryButton>
                                 Privacy Settings
                             </SecondaryButton>
+                            <a href="/profile/contact-messages">
+                                <SecondaryButton>
+                                    📧 View Contact Messages
+                                </SecondaryButton>
+                            </a>
                             <SecondaryButton className="hover:bg-red-50 hover:text-red-600 hover:border-red-300">
                                 Delete Account
                             </SecondaryButton>

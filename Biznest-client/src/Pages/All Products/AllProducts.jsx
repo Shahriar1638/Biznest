@@ -131,16 +131,6 @@ const AllProducts = () => {
                                 >
                                     <i className={`fas fa-sync-alt ${loading ? 'animate-spin' : ''}`}></i>
                                 </button>
-                                
-                                {/* View Toggle (Future feature) */}
-                                <div className="hidden sm:flex items-center space-x-2">
-                                    <OutlineButton size="small">
-                                        <i className="fas fa-th-large"></i>
-                                    </OutlineButton>
-                                    <OutlineButton size="small">
-                                        <i className="fas fa-list"></i>
-                                    </OutlineButton>
-                                </div>
                             </div>
                         </div>
 

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { loadStripe } from '@stripe/stripe-js';
 import {
     Elements,
@@ -150,6 +150,7 @@ const PaymentForm = ({ cartData, totalAmount, onPaymentSuccess, onCancel }) => {
                     confirmButtonColor: '#f59e0b'
                 }).then(() => {
                     onPaymentSuccess(response.data);
+                    Navigate('/customer-home');
                 });
             } else {
                 throw new Error(response.data.message || 'Payment processing failed');
@@ -385,7 +386,7 @@ const PaymentForm = ({ cartData, totalAmount, onPaymentSuccess, onCancel }) => {
                             </div>
                             <hr className="border-gray-200" />
                             <div className="flex justify-between text-lg font-semibold">
-                                <span>Total:</span>
+                                <span className='text-black'>Total:</span>
                                 <span className="text-amber-600">৳{totalAmount.toLocaleString()}</span>
                             </div>
                         </div>

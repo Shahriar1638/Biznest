@@ -1,14 +1,37 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Rating from 'react-rating';
 import { PrimaryButton, OutlineButton } from '../Buttons';
 import { AddToCart } from '../../Pages/All Products/AddtoCart';
+import useAxiosSecure from '../../Hooks/useAxiosSecure';
+import useAuth from '../../Hooks/useAuth';
+import Swal from 'sweetalert2';
 
 const FeatProductCard = ({ product, showWishlist = true, showAddToCart = true }) => {
     const [isWishlisted, setIsWishlisted] = useState(false);
     const [imageError, setImageError] = useState(false);
-    const [selectedQuantity, setSelectedQuantity] = useState(0);
+    const [selectedQuantity, setSelectedQuantity] = useState('');
     const [showFullDescription, setShowFullDescription] = useState(false);
+    const [isWishlistLoading, setIsWishlistLoading] = useState(false);
+    
+    const { user, updateUser } = useAuth();
+    const axiosSecure = useAxiosSecure();
+
+    // Check if product is in wishlist when component mounts
+    useEffect(() => {
+        const checkWishlistStatus = () => {
+            if (!user?.email || user.role?.type !== 'customer') {
+                setIsWishlisted(false);
+                return;
+            }
+            
+            // Check from local user data first
+            const wishlistProductIds = user.role?.details?.wishlist || [];
+            setIsWishlisted(wishlistProductIds.includes(product.productId));
+        };
+
+        checkWishlistStatus();
+    }, [user, product.productId]);
 
     // Get the first quantity option for display
     const firstQuantity = product.quantity_description?.[0];
@@ -44,11 +67,79 @@ const FeatProductCard = ({ product, showWishlist = true, showAddToCart = true })
     });
 
     // Handle wishlist toggle
-    const handleWishlistClick = (e) => {
+    const handleWishlistClick = async (e) => {
         e.preventDefault();
         e.stopPropagation();
-        setIsWishlisted(!isWishlisted);
-        // TODO: Implement actual wishlist API call
+        
+        if (!user) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Login Required',
+                text: 'Please login to add items to your wishlist.',
+                confirmButtonColor: '#f59e0b'
+            });
+            return;
+        }
+
+        try {
+            setIsWishlistLoading(true);
+            
+            // Send the productId to the wishlist API with user email
+            const response = await axiosSecure.post(`/user/wishlist/${product.productId}`, {
+                userEmail: user.email
+            });
+            
+            if (response.data.success) {
+                // Update the state based on the action returned from API
+                const newWishlistState = response.data.action === 'added';
+                setIsWishlisted(newWishlistState);
+                
+                // Update user data in localStorage and state
+                if (user && user.role && user.role.type === 'customer') {
+                    const updatedUser = { ...user };
+                    
+                    // Initialize wishlist if it doesn't exist
+                    if (!updatedUser.role.details.wishlist) {
+                        updatedUser.role.details.wishlist = [];
+                    }
+                    
+                    if (response.data.action === 'added') {
+                        // Add product to wishlist if not already there
+                        if (!updatedUser.role.details.wishlist.includes(product.productId)) {
+                            updatedUser.role.details.wishlist.push(product.productId);
+                        }
+                    } else {
+                        // Remove product from wishlist
+                        updatedUser.role.details.wishlist = updatedUser.role.details.wishlist.filter(
+                            id => id !== product.productId
+                        );
+                    }
+                    
+                    // Update user data in context and localStorage
+                    updateUser(updatedUser);
+                }
+                
+                Swal.fire({
+                    icon: 'success',
+                    title: response.data.action === 'added' ? 'Added to Wishlist' : 'Removed from Wishlist',
+                    text: response.data.message,
+                    timer: 1500,
+                    showConfirmButton: false,
+                    toast: true,
+                    position: 'top-end'
+                });
+            }
+        } catch (error) {
+            console.error('Wishlist error:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Failed to update wishlist. Please try again.',
+                confirmButtonColor: '#ef4444'
+            });
+        } finally {
+            setIsWishlistLoading(false);
+        }
     };
 
     // Handle add to cart
@@ -94,15 +185,25 @@ const FeatProductCard = ({ product, showWishlist = true, showAddToCart = true })
                     {showWishlist && (
                         <button
                             onClick={handleWishlistClick}
+                            disabled={isWishlistLoading}
                             className={`absolute top-3 right-3 p-2 rounded-full transition-all duration-200 ${
-                                isWishlisted 
-                                    ? 'bg-red-500 text-white' 
-                                    : 'bg-white text-gray-600 hover:bg-red-50 hover:text-red-500'
+                                isWishlistLoading
+                                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                    : isWishlisted 
+                                        ? 'bg-red-500 text-white' 
+                                        : 'bg-white text-gray-600 hover:bg-red-50 hover:text-red-500'
                             }`}
                         >
-                            <svg className="w-5 h-5" fill={isWishlisted ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                            </svg>
+                            {isWishlistLoading ? (
+                                <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                            ) : (
+                                <svg className="w-5 h-5" fill={isWishlisted ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                </svg>
+                            )}
                         </button>
                     )}
 
@@ -217,12 +318,13 @@ const FeatProductCard = ({ product, showWishlist = true, showAddToCart = true })
                                 value={selectedQuantity}
                                 onChange={(e) => {
                                     e.stopPropagation();
-                                    setSelectedQuantity(parseInt(e.target.value));
+                                    setSelectedQuantity(e.target.value);
                                 }}
                                 className="w-full text-sm border border-gray-300 rounded-md px-2 py-1 bg-white text-gray-700 focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
                                 onMouseDown={(e) => e.stopPropagation()}
                                 onFocus={(e) => e.stopPropagation()}
                             >
+                                <option value="">Select quantity</option>
                                 {product.quantity_description && product.quantity_description.length > 0 ? (
                                     product.quantity_description.map((qty) => (
                                         <option key={qty.unitid} value={qty.unitid}>
@@ -231,7 +333,7 @@ const FeatProductCard = ({ product, showWishlist = true, showAddToCart = true })
                                         </option>
                                     ))
                                 ) : (
-                                    <option value={0}>1 piece (In stock)</option>
+                                    <option value="default">1 piece (In stock)</option>
                                 )}
                             </select>
                         </div>
@@ -241,13 +343,13 @@ const FeatProductCard = ({ product, showWishlist = true, showAddToCart = true })
                             <PrimaryButton 
                                 size="small"
                                 onClick={handleAddToCart}
-                                disabled={availability !== 'in_stock'}
+                                disabled={availability !== 'in_stock' || !selectedQuantity}
                                 className="flex-1"
                             >
                                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m1.6 8L3 3H1m6 10v6a2 2 0 002 2h8a2 2 0 002-2v-6m-10 6V9a2 2 0 012-2h8a2 2 0 012 2v8" />
                                 </svg>
-                                Add to Cart
+                                {!selectedQuantity ? 'Select Quantity' : 'Add to Cart'}
                             </PrimaryButton>
                             
                             <Link to={`/product/${product.productId}`}>

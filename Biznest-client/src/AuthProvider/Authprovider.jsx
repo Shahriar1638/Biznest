@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import useAxiosPublic from "../Hooks/useAxiosPublic";
 import { AuthContext } from "./AuthContext";
+import { Navigate } from "react-router-dom";
 
 const Authprovider = ({children}) => {
     const [ user, setUser ] = useState(null)
@@ -78,6 +79,13 @@ const Authprovider = ({children}) => {
                 throw err
             })
     }
+
+    // Function to update user data in both state and localStorage
+    const updateUser = (updatedUserData) => {
+        setUser(updatedUserData);
+        localStorage.setItem('user-info', JSON.stringify(updatedUserData));
+    };
+
     const logOut = async () => {
         setLoading(true)
         return axiosPublic.post('/auth/logout')
@@ -88,6 +96,7 @@ const Authprovider = ({children}) => {
                 
                 setUser(null)
                 setLoading(false)
+                Navigate('/')
             })
             .catch(err => {
                 // Even if logout fails on server, clear local storage
@@ -99,7 +108,7 @@ const Authprovider = ({children}) => {
             })
     }
 
-    const authInfo = { user, signupUser, login, logOut, loading }
+    const authInfo = { user, signupUser, login, logOut, loading, updateUser }
     return (
         <AuthContext.Provider value={authInfo}>
             {children}

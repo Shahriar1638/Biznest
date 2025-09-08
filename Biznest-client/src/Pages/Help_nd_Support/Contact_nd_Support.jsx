@@ -8,7 +8,7 @@ import useAuth from '../../Hooks/useAuth';
 const Contact_nd_Support = () => {
     const { user } = useAuth();
     const [contactForm, setContactForm] = useState({
-        name: user?.name || '',
+        name: user?.username || '',
         email: user?.email || '',
         userType: user?.role?.type || 'general',
         issueCategory: '',
@@ -48,9 +48,9 @@ const Contact_nd_Support = () => {
             
             // Reset form after successful submission
             setContactForm({
-                name: '',
-                email: '',
-                userType: '',
+                name: user?.username || '',
+                email: user?.email || '',
+                userType: user?.role?.type || 'general',
                 issueCategory: '',
                 subject: '',
                 message: ''
@@ -163,7 +163,7 @@ const Contact_nd_Support = () => {
                                     <input
                                         type="text"
                                         name="name"
-                                        value={contactForm.username}
+                                        value={contactForm.name}
                                         onChange={handleContactFormChange}
                                         className="input-biznest"
                                         required

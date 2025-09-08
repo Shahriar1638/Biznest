@@ -11,6 +11,7 @@ import DefaultHome from "../Pages/Homepage/DefaultHome";
 import Help_nd_Support from "../Pages/Help_nd_Support/Help_nd_Support";
 import AllProducts from "../Pages/All Products/AllProducts";
 import Profile from "../Pages/Profile/profile";
+import ReplyContactMsg from "../Pages/Profile/ReplyContactMsg";
 import ShowCart from "../Pages/Cart/ShowCart/ShowCart";
 import ProcessPayment from "../Pages/Cart/ProcessPayment/ProcessPayment";
 import MyProducts from "../Pages/Dashboards/SellerDashboard/MyProductsList/Myproducts";
@@ -52,6 +53,10 @@ const Routes = createBrowserRouter([
             {
                 path: "/profile",
                 element: <Profile />
+            },
+            {
+                path: "/profile/contact-messages",
+                element: <ReplyContactMsg />
             },
             {
                 path: "/cart",

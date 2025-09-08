@@ -546,7 +546,7 @@ module.exports = (cartCollection, paymentCollection, productCollection, userColl
   });
 
 // ----------------------------------------------> Add/Remove Wishlist Item Endpoint <------------------------------
-  router.post('/addwishlist/:productId', async (req, res) => {
+  router.post('/wishlist/:productId', async (req, res) => {
     try {
       const { productId } = req.params;
       const userEmail = req.body.userEmail || req.user?.email; // Get from body or JWT token

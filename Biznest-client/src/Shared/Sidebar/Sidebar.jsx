@@ -149,6 +149,17 @@ const Sidebar = ({ isOpen, onClose }) => {
                 <div className="border-t border-gray-200 p-4">
                     {!isCollapsed ? (
                         <div className="space-y-2">
+                            {/* Home Page Button based on user type */}
+                            {(isAdmin || isSeller) && (
+                                <Link 
+                                    to={isAdmin ? "/admin-home" : "/seller-home"}
+                                    className="flex items-center space-x-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-amber-50 hover:text-amber-700 transition-colors"
+                                    onClick={onClose}
+                                >
+                                    <i className="fas fa-home w-5"></i>
+                                    <span>{isAdmin ? "Admin Home" : "Seller Home"}</span>
+                                </Link>
+                            )}
                             <Link 
                                 to="/profile"
                                 className="flex items-center space-x-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
@@ -167,6 +178,17 @@ const Sidebar = ({ isOpen, onClose }) => {
                         </div>
                     ) : (
                         <div className="space-y-2">
+                            {/* Home Page Button for collapsed sidebar */}
+                            {(isAdmin || isSeller) && (
+                                <Link
+                                    to={isAdmin ? "/admin-home" : "/seller-home"}
+                                    className="w-full p-2 rounded-lg text-gray-700 hover:bg-amber-50 hover:text-amber-700 transition-colors flex justify-center"
+                                    title={isAdmin ? "Admin Home" : "Seller Home"}
+                                    onClick={onClose}
+                                >
+                                    <i className="fas fa-home"></i>
+                                </Link>
+                            )}
                             <button
                                 onClick={handleLogout}
                                 className="w-full p-2 rounded-lg text-red-600 hover:bg-red-50 transition-colors"

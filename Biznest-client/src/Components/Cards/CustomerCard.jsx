@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import Rating from 'react-rating';
 import { AiOutlineHeart, AiFillHeart, AiOutlineShoppingCart, AiOutlineEye } from 'react-icons/ai';
 import { PrimaryButton, SecondaryButton } from '../Buttons';
@@ -13,8 +12,24 @@ const CustomerCard = ({ product, showWishlist = true, showAddToCart = true }) =>
     const [selectedQuantity, setSelectedQuantity] = useState('');
     const [isWishlistLoading, setIsWishlistLoading] = useState(false);
     
-    const { user } = useAuth();
+    const { user, updateUser } = useAuth();
     const axiosSecure = useAxiosSecure();
+
+    // Check if product is in wishlist when component mounts
+    useEffect(() => {
+        const checkWishlistStatus = () => {
+            if (!user?.email || user.role?.type !== 'customer') {
+                setIsWishlisted(false);
+                return;
+            }
+            
+            // Check from local user data first
+            const wishlistProductIds = user.role?.details?.wishlist || [];
+            setIsWishlisted(wishlistProductIds.includes(product.productId));
+        };
+
+        checkWishlistStatus();
+    }, [user, product.productId]);
 
     // Initialize AddToCart hook
     const addToCartHook = AddToCart({ 
@@ -46,12 +61,39 @@ const CustomerCard = ({ product, showWishlist = true, showAddToCart = true }) =>
             setIsWishlistLoading(true);
             
             // Send the productId to the wishlist API with user email
-            const response = await axiosSecure.post(`/user/addwishlist/${product.productId}`, {
+            const response = await axiosSecure.post(`/user/wishlist/${product.productId}`, {
                 userEmail: user.email
             });
             
             if (response.data.success) {
-                setIsWishlisted(!isWishlisted);
+                // Update the state based on the action returned from API
+                const newWishlistState = response.data.action === 'added';
+                setIsWishlisted(newWishlistState);
+                
+                // Update user data in localStorage and state
+                if (user && user.role && user.role.type === 'customer') {
+                    const updatedUser = { ...user };
+                    
+                    // Initialize wishlist if it doesn't exist
+                    if (!updatedUser.role.details.wishlist) {
+                        updatedUser.role.details.wishlist = [];
+                    }
+                    
+                    if (response.data.action === 'added') {
+                        // Add product to wishlist if not already there
+                        if (!updatedUser.role.details.wishlist.includes(product.productId)) {
+                            updatedUser.role.details.wishlist.push(product.productId);
+                        }
+                    } else {
+                        // Remove product from wishlist
+                        updatedUser.role.details.wishlist = updatedUser.role.details.wishlist.filter(
+                            id => id !== product.productId
+                        );
+                    }
+                    
+                    // Update user data in context and localStorage
+                    updateUser(updatedUser);
+                }
                 
                 Swal.fire({
                     icon: 'success',
@@ -105,8 +147,7 @@ const CustomerCard = ({ product, showWishlist = true, showAddToCart = true }) =>
 
     return (
         <div className="card-biznest overflow-hidden hover:scale-105 transition-transform">
-            <Link to={`/product/${product.productId}`}>
-                <div className="relative">
+            <div className="relative">
                     <img 
                         src={product.product_imgurl || '/default-product.jpg'} 
                         alt={product.product_name}
@@ -120,7 +161,7 @@ const CustomerCard = ({ product, showWishlist = true, showAddToCart = true }) =>
                             disabled={isWishlistLoading}
                             className={`absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
                                 isWishlisted 
-                                ? 'bg-red-500 text-white' 
+                                ? 'bg-green-500 text-white' 
                                 : 'bg-white text-gray-400 hover:text-red-500'
                             } ${isWishlistLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                         >
@@ -140,67 +181,66 @@ const CustomerCard = ({ product, showWishlist = true, showAddToCart = true }) =>
                             -{product.discount}%
                         </div>
                     )}
+            </div>
+
+            <div className="p-4">
+                {/* Product Name */}
+                <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 text-sm leading-tight">
+                    {product.product_name}
+                </h3>
+
+                {/* Rating - Always shown for consistent layout */}
+                <div className="flex items-center mb-2">
+                    <Rating
+                        initialRating={averageRating}
+                        readonly
+                        emptySymbol={
+                            <svg className="w-4 h-4 text-gray-300" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                            </svg>
+                        }
+                        fullSymbol={
+                            <svg className="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                            </svg>
+                        }
+                    />
+                    <span className="text-xs text-gray-500 ml-1">
+                        {product.rating && product.rating.length > 0 ? (
+                            <>({averageRating}) • {product.sell_count?.length || 0} sold</>
+                        ) : (
+                            <>No reviews • {product.sell_count?.length || 0} sold</>
+                        )}
+                    </span>
                 </div>
 
-                <div className="p-4">
-                    {/* Product Name */}
-                    <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 text-sm leading-tight">
-                        {product.product_name}
-                    </h3>
-
-                    {/* Rating - Always shown for consistent layout */}
-                    <div className="flex items-center mb-2">
-                        <Rating
-                            initialRating={averageRating}
-                            readonly
-                            emptySymbol={
-                                <svg className="w-4 h-4 text-gray-300" fill="currentColor" viewBox="0 0 20 20">
-                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                </svg>
-                            }
-                            fullSymbol={
-                                <svg className="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                </svg>
-                            }
-                        />
-                        <span className="text-xs text-gray-500 ml-1">
-                            {product.rating && product.rating.length > 0 ? (
-                                <>({averageRating}) • {product.sell_count?.length || 0} sold</>
-                            ) : (
-                                <>No reviews • {product.sell_count?.length || 0} sold</>
-                            )}
-                        </span>
-                    </div>
-
-                    {/* Price */}
-                    <div className="mb-3">
-                        <div className="flex items-center space-x-2">
-                            {product.quantity_description && product.quantity_description.length > 1 ? (
-                                <span className="text-lg font-bold text-amber-600">
-                                    From ৳{lowestPrice}
-                                </span>
-                            ) : (
-                                <span className="text-lg font-bold text-amber-600">
-                                    ৳{lowestPrice}
-                                </span>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Seller Info */}
-                    <div className="mb-3 text-xs text-gray-600">
-                        <span>Sold by: {product.selleremail || 'BizNest Seller'}</span>
-                    </div>
-
-                    {/* Category */}
-                    <div className="mb-3">
-                        <span className="inline-block bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-xs">
-                            {product.category}
-                        </span>
+                {/* Price */}
+                <div className="mb-3">
+                    <div className="flex items-center space-x-2">
+                        {product.quantity_description && product.quantity_description.length > 1 ? (
+                            <span className="text-lg font-bold text-amber-600">
+                                From ৳{lowestPrice}
+                            </span>
+                        ) : (
+                            <span className="text-lg font-bold text-amber-600">
+                                ৳{lowestPrice}
+                            </span>
+                        )}
                     </div>
                 </div>
-            </Link>
+
+                {/* Seller Info */}
+                <div className="mb-3 text-xs text-gray-600">
+                    <span>Sold by: {product.selleremail || 'BizNest Seller'}</span>
+                </div>
+
+                {/* Category */}
+                <div className="mb-3">
+                    <span className="inline-block bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-xs">
+                        {product.category}
+                    </span>
+                </div>
+            </div>
 
             {/* Interactive Elements (outside Link to prevent navigation) */}
             <div className="px-4 pb-4 space-y-3">
@@ -235,13 +275,6 @@ const CustomerCard = ({ product, showWishlist = true, showAddToCart = true }) =>
                             Add to Cart
                         </PrimaryButton>
                     )}
-                    <SecondaryButton 
-                        size="small" 
-                        className="flex-1 text-xs py-2"
-                    >
-                        <AiOutlineEye className="mr-1" />
-                        View
-                    </SecondaryButton>
                 </div>
             </div>
         </div>
