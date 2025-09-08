@@ -22,15 +22,21 @@ const ShowCart = () => {
         queryKey: ['userCart', user?.email],
         queryFn: async () => {
             if (!user?.email) return null;
-            const response = await axiosSecure.get(`/user/${user.email}/showcart`);
-            // Extract userCart from the response structure
-            return response.data.userCart;
+            try {
+                const response = await axiosSecure.get(`/user/${user.email}/showcart`);
+                return response.data.userCart;
+            } catch (error) {
+                if (error.response?.status === 404) {
+                    return null;
+                }
+                throw error;
+            }
         },
         enabled: !!user?.email,
-        staleTime: 1, // Data is always considered stale
-        cacheTime: 5 * 60 * 1000, // 5 minutes cache
-        refetchOnWindowFocus: true, // Refetch when returning to the page
-        refetchOnMount: true, // Always refetch when component mounts
+        staleTime: 1, 
+        cacheTime: 5 * 60 * 1000, 
+        refetchOnWindowFocus: true,
+        refetchOnMount: true,
     });
 
     // Fetch all products to get product details
@@ -43,8 +49,8 @@ const ShowCart = () => {
             const response = await axiosSecure.get('/products/allproducts');
             return response.data;
         },
-        staleTime: 10 * 60 * 1000, // 10 minutes
-        cacheTime: 30 * 60 * 1000, // 30 minutes
+        staleTime: 10 * 60 * 1000, 
+        cacheTime: 30 * 60 * 1000,
     });
 
     // Helper function to get product details by productId

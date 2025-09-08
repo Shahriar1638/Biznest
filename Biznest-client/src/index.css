@@ -111,7 +111,7 @@ body {
 }
 
 .input-biznest {
-  @apply w-full px-4 py-2 border border-gray-300 rounded-lg text-sm transition-all duration-150 ease-in-out focus:outline-none focus:border-amber-500;
+  @apply w-full px-4 py-2 border text-black border-gray-300 rounded-lg text-sm transition-all duration-150 ease-in-out focus:outline-none focus:border-amber-500;
   min-height: 2.5rem;
 }
 

@@ -27,8 +27,8 @@ const IconButton = ({
   const disabledClasses = disabled 
     ? 'opacity-50 cursor-not-allowed' 
     : variant === 'primary' || variant === 'danger' 
-      ? 'hover:-translate-y-0.5 hover:shadow-md'
-      : '';
+      ? 'hover:-translate-y-0.5 hover:shadow-md cursor-pointer'
+      : 'cursor-pointer';
 
   return (
     <button

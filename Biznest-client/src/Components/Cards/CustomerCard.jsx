@@ -1,12 +1,20 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Rating from 'react-rating';
+import { AiOutlineHeart, AiFillHeart, AiOutlineShoppingCart, AiOutlineEye } from 'react-icons/ai';
 import { PrimaryButton, SecondaryButton } from '../Buttons';
 import { AddToCart } from '../../Pages/All Products/AddtoCart';
+import useAxiosSecure from '../../Hooks/useAxiosSecure';
+import useAuth from '../../Hooks/useAuth';
+import Swal from 'sweetalert2';
 
 const CustomerCard = ({ product, showWishlist = true, showAddToCart = true }) => {
     const [isWishlisted, setIsWishlisted] = useState(false);
     const [selectedQuantity, setSelectedQuantity] = useState('');
+    const [isWishlistLoading, setIsWishlistLoading] = useState(false);
+    
+    const { user } = useAuth();
+    const axiosSecure = useAxiosSecure();
 
     // Initialize AddToCart hook
     const addToCartHook = AddToCart({ 
@@ -20,11 +28,52 @@ const CustomerCard = ({ product, showWishlist = true, showAddToCart = true }) =>
         }
     });
 
-    const handleWishlistToggle = (e) => {
+    const handleWishlistToggle = async (e) => {
         e.preventDefault();
         e.stopPropagation();
-        setIsWishlisted(!isWishlisted);
-        // Add wishlist API call here
+        
+        if (!user) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Login Required',
+                text: 'Please login to add items to your wishlist.',
+                confirmButtonColor: '#f59e0b'
+            });
+            return;
+        }
+
+        try {
+            setIsWishlistLoading(true);
+            
+            // Send the productId to the wishlist API with user email
+            const response = await axiosSecure.post(`/user/addwishlist/${product.productId}`, {
+                userEmail: user.email
+            });
+            
+            if (response.data.success) {
+                setIsWishlisted(!isWishlisted);
+                
+                Swal.fire({
+                    icon: 'success',
+                    title: response.data.action === 'added' ? 'Added to Wishlist' : 'Removed from Wishlist',
+                    text: response.data.message,
+                    timer: 1500,
+                    showConfirmButton: false,
+                    toast: true,
+                    position: 'top-end'
+                });
+            }
+        } catch (error) {
+            console.error('Wishlist error:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Failed to update wishlist. Please try again.',
+                confirmButtonColor: '#ef4444'
+            });
+        } finally {
+            setIsWishlistLoading(false);
+        }
     };
 
     const handleAddToCart = (e) => {
@@ -68,13 +117,20 @@ const CustomerCard = ({ product, showWishlist = true, showAddToCart = true }) =>
                     {showWishlist && (
                         <button
                             onClick={handleWishlistToggle}
+                            disabled={isWishlistLoading}
                             className={`absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
                                 isWishlisted 
                                 ? 'bg-red-500 text-white' 
                                 : 'bg-white text-gray-400 hover:text-red-500'
-                            }`}
+                            } ${isWishlistLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                         >
-                            <i className={`fas fa-heart text-sm ${isWishlisted ? 'text-white' : ''}`}></i>
+                            {isWishlistLoading ? (
+                                <div className="animate-spin w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full"></div>
+                            ) : isWishlisted ? (
+                                <AiFillHeart className="text-lg" />
+                            ) : (
+                                <AiOutlineHeart className="text-lg" />
+                            )}
                         </button>
                     )}
 
@@ -175,7 +231,7 @@ const CustomerCard = ({ product, showWishlist = true, showAddToCart = true }) =>
                             onClick={handleAddToCart}
                             className="flex-1 text-xs py-2"
                         >
-                            <i className="fas fa-shopping-cart mr-1"></i>
+                            <AiOutlineShoppingCart className="mr-1" />
                             Add to Cart
                         </PrimaryButton>
                     )}
@@ -183,7 +239,7 @@ const CustomerCard = ({ product, showWishlist = true, showAddToCart = true }) =>
                         size="small" 
                         className="flex-1 text-xs py-2"
                     >
-                        <i className="fas fa-eye mr-1"></i>
+                        <AiOutlineEye className="mr-1" />
                         View
                     </SecondaryButton>
                 </div>

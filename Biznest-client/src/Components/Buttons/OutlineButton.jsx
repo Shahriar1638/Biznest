@@ -17,7 +17,7 @@ const OutlineButton = ({
   
   const disabledClasses = disabled 
     ? 'opacity-50 cursor-not-allowed' 
-    : 'hover:bg-amber-500 hover:text-white';
+    : 'hover:bg-amber-500 hover:text-white cursor-pointer';
 
   return (
     <button

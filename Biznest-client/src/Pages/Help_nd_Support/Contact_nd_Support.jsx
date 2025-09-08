@@ -3,15 +3,18 @@ import { Link } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import useAxiosPublic from '../../Hooks/useAxiosPublic';
 import { PrimaryButton, SecondaryButton } from '../../Components/Buttons';
+import useAuth from '../../Hooks/useAuth';
 
 const Contact_nd_Support = () => {
+    const { user } = useAuth();
     const [contactForm, setContactForm] = useState({
-        name: '',
-        email: '',
-        userType: '',
+        name: user?.name || '',
+        email: user?.email || '',
+        userType: user?.role?.type || 'general',
         issueCategory: '',
         subject: '',
-        message: ''
+        message: '',
+        reply: ''
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
     const axiosPublic = useAxiosPublic();
@@ -30,7 +33,7 @@ const Contact_nd_Support = () => {
         
         try {
             // Send form data to API
-            await axiosPublic.post('/user/contact', contactForm);
+            await axiosPublic.post('/public/contact', contactForm);
             
             // Show success message with SweetAlert
             await Swal.fire({
@@ -155,12 +158,12 @@ const Contact_nd_Support = () => {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Full Name *
+                                        Full Name
                                     </label>
                                     <input
                                         type="text"
                                         name="name"
-                                        value={contactForm.name}
+                                        value={contactForm.username}
                                         onChange={handleContactFormChange}
                                         className="input-biznest"
                                         required
@@ -168,7 +171,7 @@ const Contact_nd_Support = () => {
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Email Address *
+                                        Email Address
                                     </label>
                                     <input
                                         type="email"
@@ -184,9 +187,10 @@ const Contact_nd_Support = () => {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        User Type *
+                                        User Type
                                     </label>
-                                    <select
+                                    <input
+                                        type='text'
                                         name="userType"
                                         value={contactForm.userType}
                                         onChange={handleContactFormChange}
@@ -194,15 +198,11 @@ const Contact_nd_Support = () => {
                                         style={{ color: '#000' }}
                                         required
                                     >
-                                        <option value="">Select Type</option>
-                                        <option value="buyer">Buyer</option>
-                                        <option value="seller">Seller</option>
-                                        <option value="general">General Inquiry</option>
-                                    </select>
+                                    </input>
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Issue Category *
+                                        Issue Category
                                     </label>
                                     <select
                                         name="issueCategory"
@@ -225,7 +225,7 @@ const Contact_nd_Support = () => {
 
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Subject *
+                                    Subject
                                 </label>
                                 <input
                                     type="text"
@@ -240,7 +240,7 @@ const Contact_nd_Support = () => {
 
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Message *
+                                    Message
                                 </label>
                                 <textarea
                                     name="message"

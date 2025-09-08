@@ -27,7 +27,7 @@ const Help_nd_Support = () => {
                         </PrimaryButton>
                         <SecondaryButton 
                             size="large" 
-                            className="!border-white !text-white hover:!bg-white hover:!text-amber-600"
+                            className="!border-white !text-amber-600 hover:!bg-white hover:!text-amber-600"
                             onClick={() => setActiveSection('policies')}
                         >
                             View Policies

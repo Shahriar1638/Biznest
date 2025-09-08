@@ -17,7 +17,7 @@ const PrimaryButton = ({
   
   const disabledClasses = disabled 
     ? 'opacity-50 cursor-not-allowed' 
-    : 'hover:-translate-y-0.5 hover:shadow-md';
+    : 'hover:-translate-y-0.5 hover:shadow-md cursor-pointer';
 
   return (
     <button

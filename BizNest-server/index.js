@@ -30,16 +30,19 @@ async function run() {
     const productCollection = client.db("BiznestDB").collection("products_collection");
     const cartCollection = client.db("BiznestDB").collection("cart_collection");
     const paymentCollection = client.db("BiznestDB").collection("payments_details");
+    const contactCollection = client.db("BiznestDB").collection("contact_messages");
 
     const Authentications = require('./Paths/Auth')(userCollection);
     const productAPI = require('./Paths/Products')(productCollection);
     const userAPI = require('./Paths/user')(cartCollection, paymentCollection, productCollection, userCollection);
     const sellerAPI = require('./Paths/seller')(productCollection, userCollection);
+    const publicAPI = require('./Paths/public')(contactCollection);
 
     app.use('/products', productAPI);
     app.use('/auth', Authentications);
     app.use('/user', userAPI);
     app.use('/seller', sellerAPI);
+    app.use('/public', publicAPI);
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });

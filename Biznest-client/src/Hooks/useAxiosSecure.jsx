@@ -7,7 +7,7 @@ import { AuthContext } from "../AuthProvider/AuthContext";
 const apiBaseURL = import.meta.env.VITE_API_BASE_URL;
 
 const axiosSecure = axios.create({
-    baseURL: apiBaseURL || 'http://localhost:3000'
+    baseURL: apiBaseURL
 })
 const useAxiosSecure = () => {
 

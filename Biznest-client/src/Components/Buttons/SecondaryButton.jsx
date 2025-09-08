@@ -17,7 +17,7 @@ const SecondaryButton = ({
   
   const disabledClasses = disabled 
     ? 'opacity-50 cursor-not-allowed' 
-    : 'hover:bg-gray-50 hover:border-gray-400';
+    : 'hover:bg-gray-50 hover:border-gray-400 cursor-pointer';
 
   return (
     <button

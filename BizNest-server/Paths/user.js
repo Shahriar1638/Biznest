@@ -545,5 +545,168 @@ module.exports = (cartCollection, paymentCollection, productCollection, userColl
     }
   });
 
+// ----------------------------------------------> Add/Remove Wishlist Item Endpoint <------------------------------
+  router.post('/addwishlist/:productId', async (req, res) => {
+    try {
+      const { productId } = req.params;
+      const userEmail = req.body.userEmail || req.user?.email; // Get from body or JWT token
+      
+      console.log('Wishlist request for product:', productId, 'by user:', userEmail);
+      
+      if (!userEmail) {
+        return res.status(400).json({
+          success: false,
+          message: 'User email is required'
+        });
+      }
+      
+      if (!productId) {
+        return res.status(400).json({
+          success: false,
+          message: 'Product ID is required'
+        });
+      }
+      
+      // Find the user
+      const user = await userCollection.findOne({ email: userEmail });
+      
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: 'User not found'
+        });
+      }
+      
+      // Check if user is a customer
+      if (user.role.type !== 'customer') {
+        return res.status(403).json({
+          success: false,
+          message: 'Only customers can have wishlists'
+        });
+      }
+      
+      // Check if product exists
+      const product = await productCollection.findOne({ productId });
+      
+      if (!product) {
+        return res.status(404).json({
+          success: false,
+          message: 'Product not found'
+        });
+      }
+      
+      // Initialize wishlist if it doesn't exist
+      const currentWishlist = user.role.details.wishlist || [];
+      
+      // Check if product is already in wishlist
+      const isProductInWishlist = currentWishlist.includes(productId);
+      
+      let updatedWishlist;
+      let action;
+      
+      if (isProductInWishlist) {
+        // Remove from wishlist
+        updatedWishlist = currentWishlist.filter(id => id !== productId);
+        action = 'removed';
+      } else {
+        // Add to wishlist
+        updatedWishlist = [...currentWishlist, productId];
+        action = 'added';
+      }
+      
+      // Update user's wishlist
+      const result = await userCollection.updateOne(
+        { email: userEmail },
+        {
+          $set: {
+            "role.details.wishlist": updatedWishlist
+          }
+        }
+      );
+      
+      if (result.matchedCount === 0) {
+        return res.status(404).json({
+          success: false,
+          message: 'Failed to update user wishlist'
+        });
+      }
+      
+      res.status(200).json({
+        success: true,
+        message: `Product ${action} ${action === 'added' ? 'to' : 'from'} wishlist successfully`,
+        action: action,
+        productId: productId,
+        wishlistCount: updatedWishlist.length,
+        wishlist: updatedWishlist
+      });
+      
+    } catch (error) {
+      console.error('Add/Remove wishlist error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Internal server error'
+      });
+    }
+  });
+
+// ----------------------------------------------> Get User Wishlist Endpoint <------------------------------
+  router.get('/wishlist/:email', async (req, res) => {
+    try {
+      const userEmail = req.params.email;
+      console.log('Fetching wishlist for user:', userEmail);
+      
+      // Find the user
+      const user = await userCollection.findOne({ email: userEmail });
+      
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: 'User not found'
+        });
+      }
+      
+      // Check if user is a customer
+      if (user.role.type !== 'customer') {
+        return res.status(403).json({
+          success: false,
+          message: 'Only customers can have wishlists'
+        });
+      }
+      
+      // Get wishlist product IDs
+      const wishlistProductIds = user.role.details.wishlist || [];
+      
+      if (wishlistProductIds.length === 0) {
+        return res.status(200).json({
+          success: true,
+          message: 'Wishlist is empty',
+          wishlist: [],
+          wishlistCount: 0
+        });
+      }
+      
+      // Get product details for wishlist items
+      const wishlistProducts = await productCollection.find({
+        productId: { $in: wishlistProductIds },
+        product_status: 'released' // Only include released products
+      }).toArray();
+      
+      res.status(200).json({
+        success: true,
+        message: 'Wishlist fetched successfully',
+        wishlist: wishlistProducts,
+        wishlistCount: wishlistProducts.length,
+        wishlistProductIds: wishlistProductIds
+      });
+      
+    } catch (error) {
+      console.error('Get wishlist error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Internal server error'
+      });
+    }
+  });
+
   return router;
 };

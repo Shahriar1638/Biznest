@@ -25,8 +25,8 @@ const LinkButton = ({
   const disabledClasses = disabled 
     ? 'opacity-50 cursor-not-allowed pointer-events-none' 
     : variant === 'primary' || variant === 'danger' 
-      ? 'hover:-translate-y-0.5 hover:shadow-md'
-      : '';
+      ? 'hover:-translate-y-0.5 hover:shadow-md cursor-pointer'
+      : 'cursor-pointer';
 
   // If disabled, render as span instead of Link
   if (disabled) {
