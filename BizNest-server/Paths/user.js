@@ -23,9 +23,9 @@ module.exports = (cartCollection, paymentCollection, productCollection, userColl
       const existingCart = await cartCollection.findOne({ customeremail });
       
       if (existingCart) {
-        // Check if product with same productId already exists in cart
+        // Check if product with same productId and unitid already exists in cart
         const existingItemIndex = existingCart.cart_details.findIndex(
-          item => item.productId === productId
+          item => item.productId === productId && item.unitid === unitid
         );
         console.log('Existing item index:', existingItemIndex);
         if (existingItemIndex !== -1) {
@@ -35,7 +35,8 @@ module.exports = (cartCollection, paymentCollection, productCollection, userColl
           const result = await cartCollection.updateOne(
             { 
               customeremail,
-              "cart_details.productId": productId
+              "cart_details.productId": productId,
+              "cart_details.unitid": unitid
             },
             {
               $set: {
@@ -144,8 +145,16 @@ module.exports = (cartCollection, paymentCollection, productCollection, userColl
 // ----------------------------------------------> Update Cart Item Quantity Endpoint <------------------------------
   router.put('/cart/update-quantity', async (req, res) => {
     try {
-      const { customeremail, productId, newQuantity } = req.body;
-      console.log('Update quantity request:', { customeremail, productId, newQuantity });
+      const { customeremail, unitid, productId, newQuantity } = req.body;
+      console.log('Update quantity request:', { customeremail, unitid, productId, newQuantity });
+      
+      // Validate required fields
+      if (!customeremail || !unitid || !productId || !newQuantity) {
+        return res.status(400).json({
+          success: false,
+          message: 'Missing required fields: customeremail, unitid, productId, and newQuantity are required'
+        });
+      }
       
       // Validate newQuantity
       if (!newQuantity || newQuantity <= 0) {
@@ -155,6 +164,26 @@ module.exports = (cartCollection, paymentCollection, productCollection, userColl
         });
       }
       
+      // Check if cart exists and has the specific item
+      const existingCart = await cartCollection.findOne({
+        customeremail,
+        "cart_details": {
+          $elemMatch: {
+            "productId": productId,
+            "unitid": unitid
+          }
+        }
+      });
+      
+      if (!existingCart) {
+        return res.status(404).json({
+          success: false,
+          message: 'Cart item not found for the specified product and unit'
+        });
+      }
+      
+      console.log('Found existing cart item, proceeding with update...');
+      
       // Update current date
       const currentDate = new Date();
       const day = currentDate.getDate().toString().padStart(2, '0');
@@ -163,19 +192,31 @@ module.exports = (cartCollection, paymentCollection, productCollection, userColl
       const formattedDate = `${day}-${month}-${year}`;
       
       console.log('new quantity:', newQuantity);
-      // Update the specific cart item quantity based on customeremail and productId only
+      // Update the specific cart item quantity based on customeremail, productId and unitid
+      // Using arrayFilters to ensure we update the correct array element
       const result = await cartCollection.updateOne(
-        { 
-          customeremail,
-          "cart_details.productId": productId
-        },
+        { customeremail },
         {
           $set: {
-            "cart_details.$.unitquantity": parseInt(newQuantity),
-            "cart_details.$.added_date": formattedDate
+            "cart_details.$[elem].unitquantity": parseInt(newQuantity),
+            "cart_details.$[elem].added_date": formattedDate
           }
+        },
+        {
+          arrayFilters: [
+            {
+              "elem.productId": productId,
+              "elem.unitid": unitid
+            }
+          ]
         }
       );
+      
+      console.log('Update result:', {
+        matchedCount: result.matchedCount,
+        modifiedCount: result.modifiedCount,
+        acknowledged: result.acknowledged
+      });
       
       if (result.matchedCount === 0) {
         return res.status(404).json({
@@ -191,9 +232,18 @@ module.exports = (cartCollection, paymentCollection, productCollection, userColl
         });
       }
       
+      // Get updated cart to verify the change
+      const updatedCart = await cartCollection.findOne({ customeremail });
+      const updatedItem = updatedCart?.cart_details?.find(
+        item => item.productId === productId && item.unitid === unitid
+      );
+      
+      console.log('Updated item verification:', updatedItem);
+      
       res.status(200).json({
         success: true,
         message: 'Cart item quantity updated successfully',
+        updatedItem: updatedItem,
         result
       });
       
@@ -209,20 +259,55 @@ module.exports = (cartCollection, paymentCollection, productCollection, userColl
 // ----------------------------------------------> Remove Cart Item Endpoint <------------------------------
   router.delete('/cart/remove-item', async (req, res) => {
     try {
-      const { customeremail, productId } = req.body;
-      console.log('Remove item request:', { customeremail, productId });
+      const { customeremail, productId, unitid } = req.body;
+      console.log('Remove item request:', { customeremail, productId, unitid });
       
-      // Remove the specific cart item based on customeremail and productId only
+      // Validate required fields
+      if (!customeremail || !productId || !unitid) {
+        return res.status(400).json({
+          success: false,
+          message: 'Missing required fields: customeremail, productId, and unitid are required'
+        });
+      }
+      
+      // Check if cart exists and has the specific item
+      const existingCart = await cartCollection.findOne({
+        customeremail,
+        "cart_details": {
+          $elemMatch: {
+            "productId": productId,
+            "unitid": unitid
+          }
+        }
+      });
+      
+      if (!existingCart) {
+        return res.status(404).json({
+          success: false,
+          message: 'Cart item not found for the specified product and unit'
+        });
+      }
+      
+      console.log('Found existing cart item, proceeding with removal...');
+      
+      // Remove the specific cart item based on customeremail, productId AND unitid
       const result = await cartCollection.updateOne(
         { customeremail },
         {
           $pull: {
             cart_details: {
-              productId: productId
+              productId: productId,
+              unitid: unitid
             }
           }
         }
       );
+      
+      console.log('Remove result:', {
+        matchedCount: result.matchedCount,
+        modifiedCount: result.modifiedCount,
+        acknowledged: result.acknowledged
+      });
       
       if (result.matchedCount === 0) {
         return res.status(404).json({
@@ -234,7 +319,7 @@ module.exports = (cartCollection, paymentCollection, productCollection, userColl
       if (result.modifiedCount === 0) {
         return res.status(404).json({
           success: false,
-          message: 'Cart item not found'
+          message: 'Cart item not found or already removed'
         });
       }
       
@@ -244,16 +329,22 @@ module.exports = (cartCollection, paymentCollection, productCollection, userColl
         // Optionally remove the entire cart document if empty
         await cartCollection.deleteOne({ customeremail });
         
+        console.log('Cart was empty after removal, deleted entire cart document');
+        
         return res.status(200).json({
           success: true,
           message: 'Cart item removed successfully. Cart was empty so it was deleted.',
-          cartDeleted: true
+          cartDeleted: true,
+          result
         });
       }
+      
+      console.log('Cart item removed successfully, cart still has other items');
       
       res.status(200).json({
         success: true,
         message: 'Cart item removed successfully',
+        remainingItems: updatedCart?.cart_details?.length || 0,
         result
       });
       

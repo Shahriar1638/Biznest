@@ -92,35 +92,74 @@ const ShowCart = () => {
     // Handle quantity update
     const handleQuantityUpdate = async (cartItem, newQuantity) => {
         console.log('Updating quantity for item:', cartItem, 'to new quantity:', newQuantity);
-        if (newQuantity < 1) return;
+        
+        // Validate inputs
+        if (newQuantity < 1) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Invalid Quantity',
+                text: 'Quantity must be at least 1.',
+            });
+            return;
+        }
+
+        // Check if the new quantity is the same as current
+        if (cartItem.unitquantity === newQuantity) {
+            console.log('Quantity is the same, no update needed');
+            return;
+        }
         
         setIsUpdating(true);
         try {
-            await axiosSecure.put('/user/cart/update-quantity', { 
+            console.log('Sending update request with data:', {
                 customeremail: user.email,
                 unitid: cartItem.unitid,
                 productId: cartItem.productId,
-                newQuantity: newQuantity
+                newQuantity: parseInt(newQuantity)
             });
             
-            // Refetch cart data
-            refetch();
-            
-            Swal.fire({
-                icon: 'success',
-                title: 'Updated!',
-                text: 'Cart item quantity updated successfully.',
-                timer: 1500,
-                showConfirmButton: false,
-                toast: true,
-                position: 'top-end'
+            const response = await axiosSecure.put('/user/cart/update-quantity', { 
+                customeremail: user.email,
+                unitid: cartItem.unitid,
+                productId: cartItem.productId,
+                newQuantity: parseInt(newQuantity) // Ensure it's an integer
             });
+            
+            console.log('Update response:', response.data);
+            
+            if (response.data.success) {
+                // Refetch cart data
+                await refetch();
+                
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Updated!',
+                    text: 'Cart item quantity updated successfully.',
+                    timer: 1500,
+                    showConfirmButton: false,
+                    toast: true,
+                    position: 'top-end'
+                });
+            } else {
+                throw new Error(response.data.message || 'Failed to update quantity');
+            }
         } catch (error) {
             console.error('Update quantity error:', error);
+            
+            // Enhanced error handling
+            let errorMessage = 'Failed to update quantity. Please try again.';
+            
+            if (error.response?.data?.message) {
+                errorMessage = error.response.data.message;
+            } else if (error.message) {
+                errorMessage = error.message;
+            }
+            
             Swal.fire({
                 icon: 'error',
-                title: 'Error',
-                text: 'Failed to update quantity. Please try again.',
+                title: 'Update Failed',
+                text: errorMessage,
+                confirmButtonColor: '#f59e0b'
             });
         } finally {
             setIsUpdating(false);
@@ -129,9 +168,16 @@ const ShowCart = () => {
 
     // Handle remove item
     const handleRemoveItem = async (cartItem) => {
+        // Get product and unit details for better confirmation message
+        const productDetails = getProductDetails(cartItem.productId);
+        const unitDetails = getUnitDetails(cartItem.productId, cartItem.unitid);
+        
+        const productName = productDetails?.product_name || 'Unknown Product';
+        const unitInfo = unitDetails ? `${unitDetails.unit_value} ${unitDetails.unit_type?.split('-')[0]}` : 'Unknown Unit';
+        
         const result = await Swal.fire({
             title: 'Remove Item?',
-            text: 'Are you sure you want to remove this item from your cart?',
+            html: `Are you sure you want to remove this item from your cart?<br><br><strong>${productName}</strong><br>Unit: ${unitInfo}<br>Quantity: ${cartItem.unitquantity}`,
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#d33',
@@ -141,16 +187,24 @@ const ShowCart = () => {
 
         if (result.isConfirmed) {
             try {
-                await axiosSecure.delete('/user/cart/remove-item', {
+                console.log('Removing item with data:', {
+                    customeremail: user.email,
+                    productId: cartItem.productId,
+                    unitid: cartItem.unitid
+                });
+
+                const response = await axiosSecure.delete('/user/cart/remove-item', {
                     data: {
                         customeremail: user.email,
-                        unitid: cartItem.unitid,
-                        productId: cartItem.productId
+                        productId: cartItem.productId,
+                        unitid: cartItem.unitid // Now sending unitid to remove only specific variant
                     }
                 });
                 
+                console.log('Remove response:', response.data);
+                
                 // Refetch cart data
-                refetch();
+                await refetch();
                 
                 Swal.fire({
                     icon: 'success',
@@ -163,10 +217,17 @@ const ShowCart = () => {
                 });
             } catch (error) {
                 console.error('Remove item error:', error);
+                
+                let errorMessage = 'Failed to remove item. Please try again.';
+                if (error.response?.data?.message) {
+                    errorMessage = error.response.data.message;
+                }
+                
                 Swal.fire({
                     icon: 'error',
-                    title: 'Error',
-                    text: 'Failed to remove item. Please try again.',
+                    title: 'Remove Failed',
+                    text: errorMessage,
+                    confirmButtonColor: '#f59e0b'
                 });
             }
         }
