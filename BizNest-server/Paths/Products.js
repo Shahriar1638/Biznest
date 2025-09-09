@@ -42,6 +42,60 @@ module.exports = (productCollection) => {
     }
   });
 
+// ----------------------------------------------> Search Products <------------------------------
+  router.post('/search', async (req, res) => {
+    try {
+      const { searchinfo } = req.body;
+      
+      if (!searchinfo) {
+        return res.status(400).json({
+          success: false,
+          message: 'Search info is required'
+        });
+      }
+
+      const { text, category } = searchinfo;
+      
+      // Build search query
+      let searchQuery = { product_status: "released" }; // Only search released products
+      
+      // Add text search if provided
+      if (text && text.trim()) {
+        searchQuery.product_name = { 
+          $regex: new RegExp(text.trim(), 'i') // Case-insensitive search in product name
+        };
+      }
+      
+      // Add category filter if provided
+      if (category && category.trim()) {
+        searchQuery.category = { 
+          $regex: new RegExp(category.trim(), 'i') // Case-insensitive category search
+        };
+      }
+
+      // Execute search
+      const searchResults = await productCollection
+        .find(searchQuery)
+        .sort({ product_publishdate: -1 }) // Sort by newest first
+        .toArray();
+
+      res.status(200).json({
+        success: true,
+        message: `Found ${searchResults.length} products`,
+        data: searchResults,
+        count: searchResults.length
+      });
+
+    } catch (error) {
+      console.error('Product search error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Internal server error during search',
+        error: error.message
+      });
+    }
+  });
+
 // ----------------------------------------------> Get All Products <------------------------------
   router.get('/allproducts', async (req, res) => {
     try {

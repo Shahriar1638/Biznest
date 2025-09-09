@@ -20,6 +20,12 @@ const Sidebar = ({ isOpen, onClose }) => {
             children: []
         },
         {
+            title: 'Contact Messages',
+            icon: 'fas fa-envelope',
+            path: '/dashboard/admin/feedback',
+            children: []
+        },
+        {
             title: 'Register Admin',
             icon: 'fas fa-user-plus',
             path: '/dashboard/admin/register',

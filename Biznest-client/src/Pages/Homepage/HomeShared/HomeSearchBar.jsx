@@ -12,23 +12,72 @@ const HomeSearchBar = ({ categories }) => {
 
     const handleSearch = async () => {
         if (!searchQuery.trim() && !selectedCategory) {
+            setSearchResults([]);
             return;
         }
 
         setLoading(true);
         try {
             const searchinfo = {
-                text: searchQuery,
+                text: searchQuery.trim(),
                 category: selectedCategory
             };
 
             const response = await axiosPublic.post('/products/search', { searchinfo });
-            setSearchResults(response.data || []);
+            
+            if (response.data.success) {
+                setSearchResults(response.data.data || []);
+            } else {
+                setSearchResults([]);
+            }
         } catch (error) {
             console.error('Search error:', error);
             setSearchResults([]);
         } finally {
             setLoading(false);
+        }
+    };
+
+    // Clear search results when search query is empty
+    const handleInputChange = (e) => {
+        const value = e.target.value;
+        setSearchQuery(value);
+        
+        // Clear results if search query becomes empty
+        if (!value.trim() && !selectedCategory) {
+            setSearchResults([]);
+        }
+    };
+
+    // Handle category change
+    const handleCategoryChange = async (e) => {
+        const value = e.target.value;
+        setSelectedCategory(value);
+        
+        // If there's a search query or category selected, perform search
+        if (searchQuery.trim() || value) {
+            setLoading(true);
+            try {
+                const searchinfo = {
+                    text: searchQuery.trim(),
+                    category: value
+                };
+
+                const response = await axiosPublic.post('/products/search', { searchinfo });
+                
+                if (response.data.success) {
+                    setSearchResults(response.data.data || []);
+                } else {
+                    setSearchResults([]);
+                }
+            } catch (error) {
+                console.error('Search error:', error);
+                setSearchResults([]);
+            } finally {
+                setLoading(false);
+            }
+        } else {
+            setSearchResults([]);
         }
     };
     return (
@@ -45,7 +94,7 @@ const HomeSearchBar = ({ categories }) => {
                                     type="text"
                                     placeholder="Search for products, brands, or sellers..."
                                     value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    onChange={handleInputChange}
                                     className="input-biznest w-full"
                                     onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                                 />
@@ -53,7 +102,7 @@ const HomeSearchBar = ({ categories }) => {
                             <div className="md:w-64">
                                 <select
                                     value={selectedCategory}
-                                    onChange={(e) => setSelectedCategory(e.target.value)}
+                                    onChange={handleCategoryChange}
                                     className="input-biznest w-full"
                                     style={{ color: '#000' }}
                                 >
@@ -74,12 +123,24 @@ const HomeSearchBar = ({ categories }) => {
             </section>
 
             {/* Search Results Section */}
-            {(loading || searchResults.length > 0) && (
-                <section className="py-16 px-4 bg-gray-50">
+            {(loading || searchResults.length > 0 || (searchQuery.trim() || selectedCategory)) && (
+                <section className="py-8 px-4 bg-gray-50">
                     <div className="container mx-auto">
-                        <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
-                            Search Results
-                        </h2>
+                        {(searchQuery.trim() || selectedCategory) && (
+                            <div className="mb-6">
+                                <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                                    Search Results
+                                </h3>
+                                <p className="text-gray-600">
+                                    {searchQuery.trim() && selectedCategory 
+                                        ? `Searching for "${searchQuery}" in ${selectedCategory}`
+                                        : searchQuery.trim() 
+                                            ? `Searching for "${searchQuery}" in all categories`
+                                            : `Showing all products in ${selectedCategory}`
+                                    }
+                                </p>
+                            </div>
+                        )}
                         
                         {loading ? (
                             <div className="text-center py-12">
@@ -87,21 +148,32 @@ const HomeSearchBar = ({ categories }) => {
                                 <p className="mt-4 text-gray-600">Searching products...</p>
                             </div>
                         ) : searchResults.length > 0 ? (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                                {searchResults.map((product) => (
-                                    <FeatProductCard 
-                                        key={product.product_id || product.id} 
-                                        product={product}
-                                        showWishlist={true}
-                                        showAddToCart={true}
-                                    />
-                                ))}
+                            <div>
+                                <p className="text-sm text-gray-600 mb-4">
+                                    Found {searchResults.length} product{searchResults.length !== 1 ? 's' : ''}
+                                </p>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                                    {searchResults.map((product) => (
+                                        <FeatProductCard 
+                                            key={product.productId || product._id} 
+                                            product={product}
+                                            showWishlist={true}
+                                            showAddToCart={true}
+                                        />
+                                    ))}
+                                </div>
                             </div>
-                        ) : (
+                        ) : (searchQuery.trim() || selectedCategory) ? (
                             <div className="text-center py-12">
-                                <p className="text-gray-600">No products found matching your search criteria.</p>
+                                <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+                                <h3 className="text-lg font-medium text-gray-900 mb-2">No products found</h3>
+                                <p className="text-gray-600">
+                                    No products match your search criteria. Try adjusting your search terms or category.
+                                </p>
                             </div>
-                        )}
+                        ) : null}
                     </div>
                 </section>
             )}

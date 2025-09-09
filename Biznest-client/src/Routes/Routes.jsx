@@ -18,6 +18,7 @@ import MyProducts from "../Pages/Dashboards/SellerDashboard/MyProductsList/Mypro
 import AddProducts from "../Pages/Dashboards/SellerDashboard/AddProducts/Addproducts";
 import ALLProductsAdmin from "../Pages/Dashboards/AdminDashboard/All Prodcuts Admin/ALLProductsAdmin";
 import RegisterAdmin from "../Pages/Dashboards/AdminDashboard/RegisterAdmin/RegisterAdmin";
+import Feedback from "../Pages/Dashboards/AdminDashboard/FeedBacks/Feedback";
 import DashboardDefault from "../Pages/Dashboards/DashboardDefault";
 
 const Routes = createBrowserRouter([
@@ -93,6 +94,10 @@ const Routes = createBrowserRouter([
             {
                 path: "/dashboard/admin/register",
                 element: <RegisterAdmin />
+            },
+            {
+                path: "/dashboard/admin/feedback",
+                element: <Feedback />
             }
         ]
     },

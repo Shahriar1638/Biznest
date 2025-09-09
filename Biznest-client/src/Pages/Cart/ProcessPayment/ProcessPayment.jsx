@@ -20,6 +20,7 @@ const PaymentForm = ({ cartData, totalAmount, onPaymentSuccess, onCancel }) => {
     const elements = useElements();
     const { user } = useAuth();
     const axiosSecure = useAxiosSecure();
+    const navigate = useNavigate();
     const [isProcessing, setIsProcessing] = useState(false);
     const [paymentError, setPaymentError] = useState(null);
     const [cardComplete, setCardComplete] = useState(false);
@@ -32,7 +33,7 @@ const PaymentForm = ({ cartData, totalAmount, onPaymentSuccess, onCancel }) => {
             line1: '',
             city: '',
             postal_code: '',
-            country: 'BD', // Bangladesh
+            country: 'BD',
             state: ''
         }
     });
@@ -150,7 +151,7 @@ const PaymentForm = ({ cartData, totalAmount, onPaymentSuccess, onCancel }) => {
                     confirmButtonColor: '#f59e0b'
                 }).then(() => {
                     onPaymentSuccess(response.data);
-                    Navigate('/customer-home');
+                    navigate('/customer-home');
                 });
             } else {
                 throw new Error(response.data.message || 'Payment processing failed');

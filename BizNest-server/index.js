@@ -37,7 +37,7 @@ async function run() {
     const userAPI = require('./Paths/user')(cartCollection, paymentCollection, productCollection, userCollection);
     const sellerAPI = require('./Paths/seller')(productCollection, userCollection);
     const publicAPI = require('./Paths/public')(contactCollection);
-    const adminAPI = require('./Paths/admin')(productCollection, userCollection);
+    const adminAPI = require('./Paths/admin')(productCollection, userCollection, contactCollection);
 
     app.use('/products', productAPI);
     app.use('/auth', Authentications);
