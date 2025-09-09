@@ -1,13 +1,11 @@
 import { useState, useEffect } from "react";
 import useAxiosPublic from "../Hooks/useAxiosPublic";
 import { AuthContext } from "./AuthContext";
-import { Navigate } from "react-router-dom";
 
 const Authprovider = ({children}) => {
     const [ user, setUser ] = useState(null)
     const [ loading, setLoading ] = useState(true)
     const axiosPublic = useAxiosPublic();
-    const navigate = Navigate();
 
     useEffect(() => {
         const checkAuthState = async () => {
@@ -87,13 +85,11 @@ const Authprovider = ({children}) => {
             .then(() => {
                 localStorage.removeItem('user-info');
                 localStorage.removeItem('access-token');
-                
                 setUser(null)
                 setLoading(false)
-                navigate('/')
+                window.location.href = '/';
             })
             .catch(err => {
-                // Even if logout fails on server, clear local storage
                 localStorage.removeItem('user-info');
                 localStorage.removeItem('access-token');
                 setUser(null)

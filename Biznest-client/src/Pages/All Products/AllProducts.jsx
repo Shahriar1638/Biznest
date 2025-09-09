@@ -10,6 +10,7 @@ const AllProducts = () => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
     const isSeller = user?.role?.type === 'seller';
+    const isAdmin = user?.role?.type === 'admin';
 
     const {
         data: products = [],
@@ -156,8 +157,8 @@ const AllProducts = () => {
                                     <CustomerCard 
                                         key={product.product_id || product.productId} 
                                         product={product}
-                                        showWishlist={!isSeller}
-                                        showAddToCart={!isSeller}
+                                        showWishlist={!isSeller && !isAdmin}
+                                        showAddToCart={!isSeller && !isAdmin}
                                     />
                                 ))}
                             </div>

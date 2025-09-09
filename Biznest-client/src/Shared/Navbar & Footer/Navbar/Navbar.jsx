@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import useAuth from '../../../Hooks/useAuth';
 import { PrimaryButton, SecondaryButton } from '../../../Components/Buttons';
+import NotificationBell from '../../../Components/NotificationBell/NotificationBell';
 import MobileNavbar from './MobileNavbar';
 import logo from '../../../assets/logo.png';
 
@@ -104,6 +105,9 @@ const Navbar = () => {
                     <div className="hidden md:flex items-center space-x-4">
                         {user ? (
                             <div className="flex items-center space-x-4">
+                                {/* Notification Bell - Only for logged in users */}
+                                <NotificationBell />
+                                
                                 <div className="text-right">
                                     <span className="text-sm font-medium text-gray-900 block">
                                         {user.username}

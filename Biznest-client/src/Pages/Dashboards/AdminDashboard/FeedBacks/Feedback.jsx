@@ -9,7 +9,9 @@ const Feedback = () => {
     const { user } = useAuth();
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedFilter, setSelectedFilter] = useState('all');
+    const [readFilter, setReadFilter] = useState('all'); // 'all', 'read', 'unread'
     const [isReplying, setIsReplying] = useState(false);
+    const [toggleLoading, setToggleLoading] = useState({}); // Track loading state for individual toggles
 
     const { data: contactsData = null, isLoading, error, refetch } = useQuery({
         queryKey: ['adminContacts', selectedFilter],
@@ -31,10 +33,16 @@ const Feedback = () => {
 
     const filteredContacts = contacts.filter(contact => {
         const matchesSearch = contact.userEmail?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                             contact.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                              contact.subject?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                              contact.issueCategory?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                              contact.message?.toLowerCase().includes(searchTerm.toLowerCase());
-        return matchesSearch;
+        
+        const matchesReadFilter = readFilter === 'all' || 
+                                  (readFilter === 'read' && contact.msgAdminStatus) ||
+                                  (readFilter === 'unread' && !contact.msgAdminStatus);
+        
+        return matchesSearch && matchesReadFilter;
     });
 
     const handleReply = async (contact) => {
@@ -135,6 +143,109 @@ const Feedback = () => {
         }
     };
 
+    // Handle toggle read/unread status
+    const handleToggleReadStatus = async (contact) => {
+        if (!user || user.role?.type !== 'admin') {
+            Swal.fire({
+                icon: 'error',
+                title: 'Unauthorized',
+                text: 'You must be an admin to perform this action.',
+                confirmButtonColor: '#f59e0b'
+            });
+            return;
+        }
+
+        setToggleLoading(prev => ({ ...prev, [contact._id]: true }));
+
+        try {
+            const response = await axiosSecure.put(`/admin/contacts/${contact._id}/toggle-read`, {
+                adminEmail: user.email
+            });
+
+            if (response.data.success) {
+                // Show success message
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Status Updated!',
+                    text: response.data.message,
+                    confirmButtonColor: '#f59e0b',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+                
+                // Refresh the contacts list
+                refetch();
+            } else {
+                throw new Error(response.data.message || 'Failed to toggle read status');
+            }
+        } catch (error) {
+            console.error('Error toggling read status:', error);
+            
+            Swal.fire({
+                icon: 'error',
+                title: 'Toggle Failed',
+                text: error.response?.data?.message || error.message || 'Failed to toggle read status',
+                confirmButtonColor: '#f59e0b'
+            });
+        } finally {
+            setToggleLoading(prev => ({ ...prev, [contact._id]: false }));
+        }
+    };
+
+    // Handle mark all as read
+    const handleMarkAllAsRead = async () => {
+        const unreadMessages = contacts.filter(c => !c.msgAdminStatus);
+        
+        if (unreadMessages.length === 0) {
+            Swal.fire({
+                icon: 'info',
+                title: 'No Unread Messages',
+                text: 'All messages are already marked as read.',
+                confirmButtonColor: '#f59e0b'
+            });
+            return;
+        }
+
+        const result = await Swal.fire({
+            title: 'Mark All as Read?',
+            text: `This will mark ${unreadMessages.length} messages as read.`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#f59e0b',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Yes, mark all as read'
+        });
+
+        if (result.isConfirmed) {
+            try {
+                // Mark all unread messages as read
+                for (const message of unreadMessages) {
+                    await axiosSecure.put(`/admin/contacts/${message._id}/toggle-read`, {
+                        adminEmail: user.email
+                    });
+                }
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'All Messages Marked as Read!',
+                    text: `Successfully marked ${unreadMessages.length} messages as read.`,
+                    confirmButtonColor: '#f59e0b'
+                });
+
+                // Refresh the contacts list
+                refetch();
+            } catch (error) {
+                console.error('Error marking all as read:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Failed to mark all messages as read. Please try again.',
+                    confirmButtonColor: '#f59e0b'
+                });
+            }
+        }
+    };
+
     const formatDate = (dateString) => {
         return new Date(dateString).toLocaleDateString('en-US', {
             year: 'numeric',
@@ -197,8 +308,28 @@ const Feedback = () => {
             <div className="container mx-auto px-4 py-8">
                 {/* Header */}
                 <div className="mb-8">
-                    <h1 className="text-3xl font-bold text-gray-900 mb-2">Contact Messages & Feedback</h1>
-                    <p className="text-gray-600">Manage customer inquiries and provide support</p>
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h1 className="text-3xl font-bold text-gray-900 mb-2">Contact Messages & Feedback</h1>
+                            <p className="text-gray-600">Manage customer inquiries and provide support</p>
+                        </div>
+                        <div className="text-right">
+                            <div className="text-sm text-gray-600 mb-2">
+                                Total Messages: <span className="font-semibold text-gray-900">{contacts.length}</span>
+                            </div>
+                            <div className="text-sm text-gray-600 mb-3">
+                                Unread: <span className="font-semibold text-red-600">{contacts.filter(c => !c.msgAdminStatus).length}</span>
+                            </div>
+                            {contacts.filter(c => !c.msgAdminStatus).length > 0 && (
+                                <button
+                                    onClick={handleMarkAllAsRead}
+                                    className="px-3 py-1 bg-green-600 text-white text-xs font-medium rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors"
+                                >
+                                    Mark All as Read
+                                </button>
+                            )}
+                        </div>
+                    </div>
                 </div>
 
                 {/* Filters and Search */}
@@ -234,6 +365,17 @@ const Feedback = () => {
                                 <option value="pending">Pending</option>
                                 <option value="in-progress">In Progress</option>
                                 <option value="resolved">Resolved</option>
+                            </select>
+
+                            {/* Read Filter */}
+                            <select
+                                value={readFilter}
+                                onChange={(e) => setReadFilter(e.target.value)}
+                                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent text-black bg-white"
+                            >
+                                <option value="all">All Messages</option>
+                                <option value="unread">Unread Only</option>
+                                <option value="read">Read Only</option>
                             </select>
 
                             {/* Refresh Button */}
@@ -289,17 +431,29 @@ const Feedback = () => {
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Actions
                                         </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Read Status
+                                        </th>
                                     </tr>
                                 </thead>
 
                                 {/* Table Body */}
                                 <tbody className="bg-white divide-y divide-gray-200">
                                     {filteredContacts.map((contact, index) => (
-                                        <tr key={contact._id} className={`${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'} hover:bg-amber-50 transition-colors`}>
+                                        <tr key={contact._id} className={`${
+                                            !contact.msgAdminStatus 
+                                                ? 'bg-amber-50 border-amber-200' // Unread - bright background
+                                                : index % 2 === 0 ? 'bg-gray-50' : 'bg-white' // Read - normal background
+                                        } hover:bg-amber-100 transition-colors ${!contact.msgAdminStatus ? 'shadow-sm' : ''}`}>
                                             {/* User Email */}
                                             <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="text-sm font-medium text-gray-900">
-                                                    {contact.userEmail}
+                                                <div className={`text-sm font-medium ${!contact.msgAdminStatus ? 'text-gray-900 font-semibold' : 'text-gray-900'}`}>
+                                                    {contact.userEmail || contact.email}
+                                                    {!contact.msgAdminStatus && (
+                                                        <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                                            New
+                                                        </span>
+                                                    )}
                                                 </div>
                                             </td>
 
@@ -358,6 +512,48 @@ const Feedback = () => {
                                                         {contact.status === 'resolved' ? 'View Reply' : 'Reply'}
                                                     </button>
                                                 </div>
+                                            </td>
+
+                                            {/* Read Status Toggle */}
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                                <button
+                                                    onClick={() => handleToggleReadStatus(contact)}
+                                                    disabled={toggleLoading[contact._id]}
+                                                    className={`inline-flex items-center px-3 py-1 border text-xs font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${
+                                                        contact.msgAdminStatus 
+                                                            ? 'bg-green-100 text-green-800 border-green-300 hover:bg-green-200 focus:ring-green-500' 
+                                                            : 'bg-yellow-100 text-yellow-800 border-yellow-300 hover:bg-yellow-200 focus:ring-yellow-500'
+                                                    }`}
+                                                    title={`Mark as ${contact.msgAdminStatus ? 'unread' : 'read'}`}
+                                                >
+                                                    {toggleLoading[contact._id] ? (
+                                                        <div className="flex items-center">
+                                                            <svg className="animate-spin -ml-1 mr-2 h-3 w-3" fill="none" viewBox="0 0 24 24">
+                                                                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" className="opacity-25"></circle>
+                                                                <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" className="opacity-75"></path>
+                                                            </svg>
+                                                            Updating...
+                                                        </div>
+                                                    ) : (
+                                                        <div className="flex items-center">
+                                                            {contact.msgAdminStatus ? (
+                                                                <>
+                                                                    <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                                    </svg>
+                                                                    Read
+                                                                </>
+                                                            ) : (
+                                                                <>
+                                                                    <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                                    </svg>
+                                                                    Unread
+                                                                </>
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                </button>
                                             </td>
                                         </tr>
                                     ))}

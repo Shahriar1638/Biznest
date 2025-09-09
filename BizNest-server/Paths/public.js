@@ -29,6 +29,7 @@ module.exports = (contactCollection) => {
             const contactMessage = {
                 name: name.trim(),
                 email: email.toLowerCase().trim(),
+                userEmail: email.toLowerCase().trim(), // Add userEmail for compatibility
                 userType: userType || 'general',
                 issueCategory,
                 subject: subject.trim(),
@@ -38,7 +39,9 @@ module.exports = (contactCollection) => {
                 createdAt: new Date(),
                 resolvedAt: null,
                 reply: null,
-                assignedTo: null
+                assignedTo: null,
+                msgAdminStatus: false, // Admin has read the message
+                msgClientStatus: false // Client has read the reply
             };
 
             // Insert contact message into database
@@ -190,6 +193,121 @@ module.exports = (contactCollection) => {
             res.status(500).json({
                 success: false,
                 message: 'Failed to update contact message',
+                error: process.env.NODE_ENV === 'development' ? error.message : undefined
+            });
+        }
+    });
+
+    // PUT endpoint to mark message as read by client
+    router.put('/contacts/:id/mark-read', async (req, res) => {
+        try {
+            const { id } = req.params;
+            const { userEmail } = req.body;
+            
+            // Validate input
+            if (!userEmail) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'User email is required'
+                });
+            }
+
+            // Update message to mark as read by client
+            const result = await contactCollection.updateOne(
+                { 
+                    _id: new require('mongodb').ObjectId(id),
+                    email: userEmail.toLowerCase().trim()
+                },
+                { 
+                    $set: { 
+                        msgClientStatus: true,
+                        clientReadAt: new Date()
+                    }
+                }
+            );
+
+            if (result.matchedCount === 0) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Contact message not found or unauthorized'
+                });
+            }
+
+            res.status(200).json({
+                success: true,
+                message: 'Message marked as read'
+            });
+
+        } catch (error) {
+            console.error('Error marking message as read:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Failed to mark message as read',
+                error: process.env.NODE_ENV === 'development' ? error.message : undefined
+            });
+        }
+    });
+
+    // PUT endpoint to toggle read status by client
+    router.put('/contacts/:id/toggle-read', async (req, res) => {
+        try {
+            const { id } = req.params;
+            const { userEmail } = req.body;
+            
+            // Validate input
+            if (!userEmail) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'User email is required'
+                });
+            }
+
+            // Get current message status
+            const currentMessage = await contactCollection.findOne({
+                _id: new require('mongodb').ObjectId(id),
+                email: userEmail.toLowerCase().trim()
+            });
+
+            if (!currentMessage) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Contact message not found or unauthorized'
+                });
+            }
+
+            // Toggle read status
+            const newReadStatus = !currentMessage.msgClientStatus;
+            const updateData = {
+                msgClientStatus: newReadStatus
+            };
+
+            // Add timestamp based on new status
+            if (newReadStatus) {
+                updateData.clientReadAt = new Date();
+            } else {
+                updateData.clientReadAt = null;
+            }
+
+            // Update message
+            const result = await contactCollection.updateOne(
+                { 
+                    _id: new require('mongodb').ObjectId(id),
+                    email: userEmail.toLowerCase().trim()
+                },
+                { $set: updateData }
+            );
+
+            res.status(200).json({
+                success: true,
+                message: `Message marked as ${newReadStatus ? 'read' : 'unread'}`,
+                isRead: newReadStatus
+            });
+
+        } catch (error) {
+            console.error('Error toggling message read status:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Failed to toggle message read status',
                 error: process.env.NODE_ENV === 'development' ? error.message : undefined
             });
         }

@@ -14,7 +14,9 @@ const Contact_nd_Support = () => {
         issueCategory: '',
         subject: '',
         message: '',
-        reply: ''
+        reply: '',
+        msgAdminStatus: false,
+        msgClientStatus: false
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
     const axiosPublic = useAxiosPublic();

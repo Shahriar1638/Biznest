@@ -3,11 +3,13 @@ import Swal from 'sweetalert2';
 import useAuth from '../../Hooks/useAuth';
 import useAxiosPublic from '../../Hooks/useAxiosPublic';
 import { PrimaryButton, SecondaryButton } from '../../Components/Buttons';
+import { MessageDetailsModal } from '../../Components/Modals';
 
 const ReplyContactMsg = () => {
     const { user } = useAuth();
     const [contactMessages, setContactMessages] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [toggleLoadingStates, setToggleLoadingStates] = useState({});
     const axiosPublic = useAxiosPublic();
 
     const fetchContactMessages = useCallback(async () => {
@@ -39,6 +41,109 @@ const ReplyContactMsg = () => {
         fetchContactMessages();
     }, [fetchContactMessages]);
 
+    // Handle toggle read/unread status
+    const handleToggleReadStatus = async (messageId) => {
+        if (!user?.email) return;
+
+        try {
+            setToggleLoadingStates(prev => ({ ...prev, [messageId]: true }));
+
+            const response = await axiosPublic.put(`/public/contacts/${messageId}/toggle-read`, {
+                userEmail: user.email
+            });
+
+            if (response.data.success) {
+                // Update the local state
+                setContactMessages(prev => 
+                    prev.map(msg => 
+                        msg._id === messageId 
+                            ? { ...msg, msgClientStatus: response.data.isRead }
+                            : msg
+                    )
+                );
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Status Updated',
+                    text: response.data.message,
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+            }
+        } catch (error) {
+            console.error('Error toggling read status:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Failed to update message status. Please try again.',
+                confirmButtonColor: '#ef4444'
+            });
+        } finally {
+            setToggleLoadingStates(prev => ({ ...prev, [messageId]: false }));
+        }
+    };
+
+    // Handle mark all as read
+    const handleMarkAllAsRead = async () => {
+        const unreadMessages = contactMessages.filter(msg => !msg.msgClientStatus);
+        
+        if (unreadMessages.length === 0) {
+            Swal.fire({
+                icon: 'info',
+                title: 'No Unread Messages',
+                text: 'All messages are already marked as read.',
+                timer: 2000,
+                showConfirmButton: false
+            });
+            return;
+        }
+
+        const confirm = await Swal.fire({
+            title: 'Mark All as Read?',
+            text: `This will mark ${unreadMessages.length} messages as read.`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#10b981',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Yes, mark all as read'
+        });
+
+        if (!confirm.isConfirmed) return;
+
+        try {
+            // Mark all unread messages as read
+            const promises = unreadMessages.map(msg => 
+                axiosPublic.put(`/public/contacts/${msg._id}/toggle-read`, {
+                    userEmail: user.email
+                })
+            );
+
+            await Promise.all(promises);
+
+            // Update local state
+            setContactMessages(prev => 
+                prev.map(msg => ({ ...msg, msgClientStatus: true }))
+            );
+
+            Swal.fire({
+                icon: 'success',
+                title: 'Success!',
+                text: `${unreadMessages.length} messages marked as read.`,
+                timer: 2000,
+                showConfirmButton: false
+            });
+
+        } catch (error) {
+            console.error('Error marking all messages as read:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Failed to mark all messages as read. Please try again.',
+                confirmButtonColor: '#ef4444'
+            });
+        }
+    };
+
     const truncateText = (text, maxLength = 50) => {
         if (!text) return 'No message';
         if (text.length <= maxLength) return text;
@@ -69,50 +174,12 @@ const ReplyContactMsg = () => {
 
     // Handle view more button click
     const handleViewMore = (message) => {
-        const messageContent = `
-            <div class="text-left space-y-4">
-                <div class="border-b pb-3 mb-3">
-                    <h3 class="font-bold text-lg text-gray-900">${message.subject}</h3>
-                    <p class="text-sm text-gray-600">Category: ${message.issueCategory}</p>
-                    <p class="text-sm text-gray-600">Submitted: ${formatDate(message.createdAt)}</p>
-                    <span class="inline-block mt-2 px-2 py-1 rounded-full text-xs font-medium border ${getStatusBadge(message.status).split(' ').slice(3).join(' ')}">${message.status.charAt(0).toUpperCase() + message.status.slice(1)}</span>
-                </div>
-                
-                <div class="mb-4">
-                    <h4 class="font-semibold text-gray-900 mb-2">Your Message:</h4>
-                    <div class="bg-gray-50 p-3 rounded-lg">
-                        <p class="text-gray-700 whitespace-pre-wrap">${message.message}</p>
-                    </div>
-                </div>
-                
-                ${message.reply ? `
-                    <div class="mb-4">
-                        <h4 class="font-semibold text-gray-900 mb-2">Our Reply:</h4>
-                        <div class="bg-blue-50 p-3 rounded-lg border-l-4 border-blue-400">
-                            <p class="text-gray-700 whitespace-pre-wrap">${message.reply}</p>
-                            ${message.resolvedAt ? `<p class="text-xs text-gray-500 mt-2">Replied on: ${formatDate(message.resolvedAt)}</p>` : ''}
-                        </div>
-                    </div>
-                ` : `
-                    <div class="mb-4">
-                        <div class="bg-yellow-50 p-3 rounded-lg border-l-4 border-yellow-400">
-                            <p class="text-gray-600 text-sm">⏳ No reply yet. We'll get back to you within 24 hours.</p>
-                        </div>
-                    </div>
-                `}
-            </div>
-        `;
-
-        Swal.fire({
-            title: 'Message Details',
-            html: messageContent,
-            width: '600px',
-            showCloseButton: true,
-            showConfirmButton: false,
-            customClass: {
-                popup: 'text-left'
-            }
+        const modal = MessageDetailsModal({ 
+            message, 
+            onToggleRead: handleToggleReadStatus,
+            isToggling: toggleLoadingStates[message._id] || false
         });
+        modal.showModal();
     };
 
     if (isLoading) {
@@ -139,16 +206,34 @@ const ReplyContactMsg = () => {
                     </p>
                 </div>
 
-                {/* Stats */}
                 <div className="mb-6">
                     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
                         <div className="flex items-center justify-between">
-                            <div className="text-sm text-gray-500">
-                                Total Messages: <span className="font-semibold text-gray-900">{contactMessages.length}</span>
+                            <div className="flex space-x-6">
+                                <div className="text-sm text-gray-500">
+                                    Total Messages: <span className="font-semibold text-gray-900">{contactMessages.length}</span>
+                                </div>
+                                <div className="text-sm text-gray-500">
+                                    Unread: <span className="font-semibold text-amber-600">
+                                        {contactMessages.filter(msg => !msg.msgClientStatus).length}
+                                    </span>
+                                </div>
+                                <div className="text-sm text-gray-500">
+                                    Read: <span className="font-semibold text-green-600">
+                                        {contactMessages.filter(msg => msg.msgClientStatus).length}
+                                    </span>
+                                </div>
                             </div>
-                            <SecondaryButton onClick={fetchContactMessages} size="small">
-                                🔄 Refresh Messages
-                            </SecondaryButton>
+                            <div className="flex space-x-2">
+                                {contactMessages.filter(msg => !msg.msgClientStatus).length > 0 && (
+                                    <PrimaryButton onClick={handleMarkAllAsRead} size="small">
+                                        ✅ Mark All as Read
+                                    </PrimaryButton>
+                                )}
+                                <SecondaryButton onClick={fetchContactMessages} size="small">
+                                    🔄 Refresh Messages
+                                </SecondaryButton>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -170,17 +255,40 @@ const ReplyContactMsg = () => {
                             <table className="w-full table-auto">
                                 <thead>
                                     <tr className="border-b border-gray-200">
+                                        <th className="text-left py-3 px-4 font-semibold text-gray-900">Status</th>
                                         <th className="text-left py-3 px-4 font-semibold text-gray-900">Subject</th>
                                         <th className="text-left py-3 px-4 font-semibold text-gray-900">Category</th>
-                                        <th className="text-left py-3 px-4 font-semibold text-gray-900">Message</th>
-                                        <th className="text-left py-3 px-4 font-semibold text-gray-900">Status</th>
+                                        <th className="text-left py-3 px-4 font-semibold text-gray-900">Reply Status</th>
                                         <th className="text-left py-3 px-4 font-semibold text-gray-900">Date</th>
-                                        <th className="text-left py-3 px-4 font-semibold text-gray-900">Action</th>
+                                        <th className="text-left py-3 px-4 font-semibold text-gray-900">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {contactMessages.map((message, index) => (
-                                        <tr key={message._id} className={`border-b border-gray-100 ${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'} hover:bg-amber-50 transition-colors`}>
+                                        <tr key={message._id} className={`border-b border-gray-100 transition-colors hover:bg-amber-50 ${
+                                            !message.msgClientStatus 
+                                                ? 'bg-amber-50 border-l-4 border-l-amber-400' 
+                                                : index % 2 === 0 ? 'bg-gray-50' : 'bg-white'
+                                        }`}>
+                                            <td className="py-3 px-4">
+                                                <div className="flex items-center space-x-2">
+                                                    <div className={`w-3 h-3 rounded-full ${
+                                                        message.msgClientStatus ? 'bg-green-400' : 'bg-amber-400'
+                                                    }`}></div>
+                                                    <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+                                                        message.msgClientStatus 
+                                                            ? 'bg-green-100 text-green-800' 
+                                                            : 'bg-amber-100 text-amber-800'
+                                                    }`}>
+                                                        {message.msgClientStatus ? 'Read' : 'Unread'}
+                                                    </span>
+                                                    {!message.msgClientStatus && (
+                                                        <span className="text-xs bg-red-100 text-red-800 px-1 py-0.5 rounded">
+                                                            New
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </td>
                                             <td className="py-3 px-4">
                                                 <div className="font-medium text-gray-900">
                                                     {truncateText(message.subject, 30)}
@@ -190,11 +298,6 @@ const ReplyContactMsg = () => {
                                                 <span className="text-sm text-gray-600 capitalize">
                                                     {message.issueCategory.replace('-', ' ')}
                                                 </span>
-                                            </td>
-                                            <td className="py-3 px-4">
-                                                <div className="text-sm text-gray-700">
-                                                    {truncateText(message.message, 40)}
-                                                </div>
                                             </td>
                                             <td className="py-3 px-4">
                                                 <span className={getStatusBadge(message.status)}>
@@ -207,12 +310,32 @@ const ReplyContactMsg = () => {
                                                 </div>
                                             </td>
                                             <td className="py-3 px-4">
-                                                <SecondaryButton 
-                                                    size="small" 
-                                                    onClick={() => handleViewMore(message)}
-                                                >
-                                                    View More
-                                                </SecondaryButton>
+                                                <div className="flex space-x-2">
+                                                    <SecondaryButton 
+                                                        size="small" 
+                                                        onClick={() => handleViewMore(message)}
+                                                    >
+                                                        View More
+                                                    </SecondaryButton>
+                                                    <button
+                                                        onClick={() => handleToggleReadStatus(message._id)}
+                                                        disabled={toggleLoadingStates[message._id]}
+                                                        className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
+                                                            message.msgClientStatus
+                                                                ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200' 
+                                                                : 'bg-green-100 text-green-800 hover:bg-green-200'
+                                                        } disabled:opacity-50 disabled:cursor-not-allowed`}
+                                                    >
+                                                        {toggleLoadingStates[message._id] ? (
+                                                            <div className="flex items-center space-x-1">
+                                                                <div className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin"></div>
+                                                                <span>...</span>
+                                                            </div>
+                                                        ) : (
+                                                            message.msgClientStatus ? 'Mark Unread' : 'Mark Read'
+                                                        )}
+                                                    </button>
+                                                </div>
                                             </td>
                                         </tr>
                                     ))}

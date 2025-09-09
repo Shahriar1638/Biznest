@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { PrimaryButton, SecondaryButton } from '../../../Components/Buttons';
+import NotificationBell from '../../../Components/NotificationBell/NotificationBell';
 
 const MobileNavbar = ({ user, getHomeRoute, handleLogout }) => {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -16,7 +17,10 @@ const MobileNavbar = ({ user, getHomeRoute, handleLogout }) => {
     return (
         <>
             {/* Mobile menu button */}
-            <div className="md:hidden">
+            <div className="md:hidden flex items-center space-x-2">
+                {/* Notification Bell for Mobile - Only for logged in users */}
+                {user && <NotificationBell />}
+                
                 <button 
                     onClick={toggleMobileMenu}
                     className="text-gray-700 hover:text-amber-600 p-2 transition-colors"
@@ -63,8 +67,8 @@ const MobileNavbar = ({ user, getHomeRoute, handleLogout }) => {
                             </Link>
                         )}
                         
-                        {/* Seller-specific navigation */}
-                        {user && user.role?.type === 'seller' && (
+                        {/* Seller and Admin-specific navigation */}
+                        {user && (user.role?.type === 'seller' || user.role?.type === 'admin') && (
                             <Link 
                                 to="/dashboard" 
                                 className="block text-gray-700 hover:text-amber-600 font-medium transition-colors py-2"

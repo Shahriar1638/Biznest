@@ -273,5 +273,138 @@ module.exports = (productCollection, userCollection, contactCollection) => {
         }
     });
 
+    // Mark contact message as read by admin
+    router.put('/contacts/:id/mark-read', async (req, res) => {
+        try {
+            const { id } = req.params;
+            const { adminEmail } = req.body;
+
+            // Verify admin authorization
+            if (adminEmail) {
+                const admin = await userCollection.findOne({ 
+                    email: adminEmail,
+                    'role.type': 'admin'
+                });
+
+                if (!admin) {
+                    return res.status(403).json({
+                        success: false,
+                        message: 'Unauthorized: Admin access required'
+                    });
+                }
+            }
+
+            // Update message to mark as read by admin
+            const { ObjectId } = require('mongodb');
+            const result = await contactCollection.updateOne(
+                { _id: new ObjectId(id) },
+                { 
+                    $set: { 
+                        msgAdminStatus: true,
+                        adminReadAt: new Date()
+                    }
+                }
+            );
+
+            if (result.matchedCount === 0) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Contact message not found'
+                });
+            }
+
+            res.status(200).json({
+                success: true,
+                message: 'Message marked as read by admin'
+            });
+
+        } catch (error) {
+            console.error('Error marking admin message as read:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Failed to mark message as read',
+                error: error.message
+            });
+        }
+    });
+
+    // Toggle read/unread status for contact message - Admin only
+    router.put('/contacts/:id/toggle-read', async (req, res) => {
+        try {
+            const { id } = req.params;
+            const { adminEmail } = req.body;
+
+            // Verify admin authorization
+            if (adminEmail) {
+                const admin = await userCollection.findOne({ 
+                    email: adminEmail,
+                    'role.type': 'admin'
+                });
+
+                if (!admin) {
+                    return res.status(403).json({
+                        success: false,
+                        message: 'Unauthorized: Admin access required'
+                    });
+                }
+            }
+
+            // Get current message to toggle status
+            const { ObjectId } = require('mongodb');
+            const currentMessage = await contactCollection.findOne({ _id: new ObjectId(id) });
+            
+            if (!currentMessage) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Contact message not found'
+                });
+            }
+
+            // Toggle the read status
+            const newStatus = !currentMessage.msgAdminStatus;
+            const updateData = {
+                msgAdminStatus: newStatus
+            };
+
+            // Add timestamp based on status
+            if (newStatus) {
+                updateData.adminReadAt = new Date();
+            } else {
+                updateData.$unset = { adminReadAt: 1 };
+            }
+
+            // Update message with toggled status
+            const result = await contactCollection.updateOne(
+                { _id: new ObjectId(id) },
+                newStatus ? { $set: updateData } : { $set: { msgAdminStatus: false }, $unset: { adminReadAt: 1 } }
+            );
+
+            if (result.matchedCount === 0) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Contact message not found'
+                });
+            }
+
+            res.status(200).json({
+                success: true,
+                message: `Message marked as ${newStatus ? 'read' : 'unread'}`,
+                data: {
+                    messageId: id,
+                    msgAdminStatus: newStatus,
+                    adminReadAt: newStatus ? new Date() : null
+                }
+            });
+
+        } catch (error) {
+            console.error('Error toggling message read status:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Failed to toggle message read status',
+                error: error.message
+            });
+        }
+    });
+
     return router;
 };
