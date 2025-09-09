@@ -29,8 +29,6 @@ const Login = () => {
 
         try {
             const user = await login(formData);
-            
-            // Navigate based on user role
             if (user && user.role) {
                 switch (user.role.type) {
                     case 'admin':
@@ -43,10 +41,9 @@ const Login = () => {
                         navigate('/customer-home');
                         break;
                     default:
-                        navigate('/'); // Default home page
+                        navigate('/');
                 }
             } else {
-                // Fallback if no role information
                 navigate('/');
             }
         } catch (err) {

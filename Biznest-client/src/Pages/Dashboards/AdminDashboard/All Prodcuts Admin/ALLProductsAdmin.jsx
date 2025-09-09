@@ -11,7 +11,6 @@ const ALLProductsAdmin = () => {
     const [selectedFilter, setSelectedFilter] = useState('all');
     const [selectedCategory, setSelectedCategory] = useState('all');
 
-    // Fetch products based on filter
     const { data: productsData = null, isLoading, error, refetch } = useQuery({
         queryKey: ['adminProducts', selectedFilter],
         queryFn: async () => {
@@ -24,14 +23,11 @@ const ALLProductsAdmin = () => {
                 return response.data;
             }
         },
-        staleTime: 5 * 60 * 1000, // 5 minutes
-        cacheTime: 10 * 60 * 1000, // 10 minutes
+        staleTime: 5 * 60 * 1000,
+        cacheTime: 10 * 60 * 1000,
     });
 
-    // Extract products array from the response
     const products = productsData?.products || [];
-
-    // Filter products based on search and category
     const filteredProducts = products.filter(product => {
         const matchesSearch = product.product_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                              product.productId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -40,13 +36,11 @@ const ALLProductsAdmin = () => {
         return matchesSearch && matchesCategory;
     });
 
-    // Get unique categories for filter
     const categories = ['all', ...new Set(products.map(product => product.category).filter(Boolean))];
 
-    // Handle product status change
+
     const handleStatusChange = async (productId, newStatus) => {
         try {
-            // Check if user is admin
             if (!user || user.role?.type !== 'admin') {
                 Swal.fire({
                     icon: 'error',
@@ -68,7 +62,6 @@ const ALLProductsAdmin = () => {
             });
 
             if (result.isConfirmed) {
-                // Show loading state
                 Swal.fire({
                     title: 'Updating...',
                     text: 'Please wait while we update the product status.',
@@ -80,7 +73,6 @@ const ALLProductsAdmin = () => {
                     }
                 });
 
-                // Make API call to update product status
                 const response = await axiosSecure.put('/admin/products/status', {
                     productId: productId,
                     status: newStatus,
@@ -95,7 +87,6 @@ const ALLProductsAdmin = () => {
                         confirmButtonColor: '#f59e0b'
                     });
                     
-                    // Refresh the products list
                     refetch();
                 } else {
                     throw new Error(response.data.message || 'Failed to update product status');
@@ -104,7 +95,6 @@ const ALLProductsAdmin = () => {
         } catch (error) {
             console.error('Error updating product status:', error);
             
-            // Extract error message
             const errorMessage = error.response?.data?.message || error.message || 'Failed to update product status';
             
             Swal.fire({
@@ -116,7 +106,6 @@ const ALLProductsAdmin = () => {
         }
     };
 
-    // Loading state
     if (isLoading) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -127,8 +116,6 @@ const ALLProductsAdmin = () => {
             </div>
         );
     }
-
-    // Error state
     if (error) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">

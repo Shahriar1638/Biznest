@@ -11,7 +11,6 @@ const Feedback = () => {
     const [selectedFilter, setSelectedFilter] = useState('all');
     const [isReplying, setIsReplying] = useState(false);
 
-    // Fetch contact messages based on filter
     const { data: contactsData = null, isLoading, error, refetch } = useQuery({
         queryKey: ['adminContacts', selectedFilter],
         queryFn: async () => {
@@ -24,14 +23,12 @@ const Feedback = () => {
             return response.data;
         },
         enabled: !!user?.email && user?.role?.type === 'admin',
-        staleTime: 5 * 60 * 1000, // 5 minutes
-        cacheTime: 10 * 60 * 1000, // 10 minutes
+        staleTime: 5 * 60 * 1000,
+        cacheTime: 10 * 60 * 1000,
     });
 
-    // Extract contacts array from the response
     const contacts = contactsData?.data || [];
 
-    // Filter contacts based on search
     const filteredContacts = contacts.filter(contact => {
         const matchesSearch = contact.userEmail?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                              contact.subject?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -40,7 +37,6 @@ const Feedback = () => {
         return matchesSearch;
     });
 
-    // Handle reply to contact message
     const handleReply = async (contact) => {
         if (!user || user.role?.type !== 'admin') {
             Swal.fire({
@@ -57,7 +53,7 @@ const Feedback = () => {
             title: 'Reply to Contact Message',
             html: `
                 <div class="text-left mb-4">
-                    <p><strong>From:</strong> ${contact.userEmail}</p>
+                    <p><strong>From:</strong> ${contact.email}</p>
                     <p><strong>Subject:</strong> ${contact.subject}</p>
                     <p><strong>Category:</strong> ${contact.issueCategory}</p>
                     <p><strong>Date:</strong> ${new Date(contact.createdAt).toLocaleDateString()}</p>
@@ -93,7 +89,6 @@ const Feedback = () => {
         if (replyText) {
             setIsReplying(true);
             try {
-                // Show loading state
                 Swal.fire({
                     title: 'Sending Reply...',
                     text: 'Please wait while we send your reply.',
@@ -105,7 +100,6 @@ const Feedback = () => {
                     }
                 });
 
-                // Make API call to send reply
                 const response = await axiosSecure.put('/admin/contacts/reply', {
                     messageId: contact._id,
                     reply: replyText,
@@ -120,7 +114,6 @@ const Feedback = () => {
                         confirmButtonColor: '#f59e0b'
                     });
                     
-                    // Refresh the contacts list
                     refetch();
                 } else {
                     throw new Error(response.data.message || 'Failed to send reply');
@@ -128,7 +121,6 @@ const Feedback = () => {
             } catch (error) {
                 console.error('Error sending reply:', error);
                 
-                // Extract error message
                 const errorMessage = error.response?.data?.message || error.message || 'Failed to send reply';
                 
                 Swal.fire({
@@ -143,7 +135,6 @@ const Feedback = () => {
         }
     };
 
-    // Format date for display
     const formatDate = (dateString) => {
         return new Date(dateString).toLocaleDateString('en-US', {
             year: 'numeric',
@@ -154,7 +145,6 @@ const Feedback = () => {
         });
     };
 
-    // Get status badge styling
     const getStatusBadge = (status) => {
         const styles = {
             pending: 'bg-yellow-100 text-yellow-800 border-yellow-200',
@@ -165,14 +155,12 @@ const Feedback = () => {
         return `px-2 py-1 rounded-full text-xs font-medium border ${styles[status] || styles.pending}`;
     };
 
-    // Truncate text for table display
     const truncateText = (text, maxLength = 50) => {
         if (!text) return 'No message';
         if (text.length <= maxLength) return text;
         return text.substring(0, maxLength) + '...';
     };
 
-    // Loading state
     if (isLoading) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -184,7 +172,6 @@ const Feedback = () => {
         );
     }
 
-    // Error state
     if (error) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">

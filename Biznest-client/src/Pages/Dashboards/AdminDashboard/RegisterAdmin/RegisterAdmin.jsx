@@ -5,8 +5,6 @@ import Swal from 'sweetalert2';
 const RegisterAdmin = () => {
     const axiosSecure = useAxiosSecure();
     const [loading, setLoading] = useState(false);
-
-    // Form state
     const [formData, setFormData] = useState({
         username: '',
         email: '',
@@ -52,7 +50,6 @@ const RegisterAdmin = () => {
         setLoading(true);
 
         try {
-            // Validate passwords match
             if (formData.password !== formData.confirmPassword) {
                 Swal.fire({
                     icon: 'error',
@@ -64,7 +61,6 @@ const RegisterAdmin = () => {
                 return;
             }
 
-            // Validate password length
             if (formData.password.length < 6) {
                 Swal.fire({
                     icon: 'error',
@@ -76,11 +72,9 @@ const RegisterAdmin = () => {
                 return;
             }
 
-            // Remove confirmPassword from the data to send
             // eslint-disable-next-line no-unused-vars
             const { confirmPassword, ...adminData } = formData;
 
-            // Send to API
             const response = await axiosSecure.post('/auth/adminregister', adminData);
             
             if (response.data.success) {
@@ -91,7 +85,6 @@ const RegisterAdmin = () => {
                     confirmButtonColor: '#f59e0b'
                 });
                 
-                // Reset form
                 setFormData({
                     username: '',
                     email: '',

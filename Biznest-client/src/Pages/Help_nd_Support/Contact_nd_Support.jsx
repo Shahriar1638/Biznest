@@ -32,10 +32,7 @@ const Contact_nd_Support = () => {
         setIsSubmitting(true);
         
         try {
-            // Send form data to API
             await axiosPublic.post('/public/contact', contactForm);
-            
-            // Show success message with SweetAlert
             await Swal.fire({
                 icon: 'success',
                 title: 'Message Sent Successfully!',
@@ -45,8 +42,6 @@ const Contact_nd_Support = () => {
                 background: '#fffbf0',
                 color: '#1f2937'
             });
-            
-            // Reset form after successful submission
             setContactForm({
                 name: user?.username || '',
                 email: user?.email || '',
@@ -58,8 +53,6 @@ const Contact_nd_Support = () => {
             
         } catch (error) {
             console.error('Error sending contact form:', error);
-            
-            // Show error message with SweetAlert
             await Swal.fire({
                 icon: 'error',
                 title: 'Oops! Something went wrong',

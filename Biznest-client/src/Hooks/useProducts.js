@@ -76,6 +76,6 @@ export const useWishlist = () => {
         staleTime: 2 * 60 * 1000,
         cacheTime: 5 * 60 * 1000,
         retry: 1,
-        refetchOnWindowFocus: true // Refetch wishlist when user returns to tab
+        refetchOnWindowFocus: true
     });
 };

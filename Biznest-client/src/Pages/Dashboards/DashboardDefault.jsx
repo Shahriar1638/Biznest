@@ -12,7 +12,6 @@ const DashboardDefault = () => {
         } else if (user?.role?.type === 'admin') {
             navigate('/dashboard/admin/products');
         } else {
-            // For customers or unknown roles, redirect to profile
             navigate('/profile');
         }
     }, [user, navigate]);

@@ -13,7 +13,6 @@ const AddToCart = ({
     const axiosSecure = useAxiosSecure();
 
     const handleAddToCart = async () => {
-        // Validation: Check if quantity is selected
         if (!selectedQuantity) {
             const errorMessage = 'Please select a quantity option';
             if (showAlert) alert(errorMessage);
@@ -21,7 +20,6 @@ const AddToCart = ({
             return false;
         }
 
-        // Validation: Check if user is logged in
         if (!user) {
             const errorMessage = 'Please log in to add items to cart';
             if (showAlert) alert(errorMessage);
@@ -29,7 +27,6 @@ const AddToCart = ({
             return false;
         }
 
-        // Create UserCart object
         const UserCart = {
             selleremail: product.selleremail,
             customeremail: user.email,
@@ -39,17 +36,11 @@ const AddToCart = ({
         };
 
         try {
-            // Send cart data to backend API
             const response = await axiosSecure.post('/user/cart', UserCart);
-            
-            // Log the UserCart object to console
             console.log('UserCart object sent to API:', UserCart);
             console.log('API Response:', response.data);
-            
-            // Success callback
             onSuccess(UserCart);
             
-            // Show success message with SweetAlert2
             if (showAlert) {
                 Swal.fire({
                     icon: 'success',
@@ -61,15 +52,10 @@ const AddToCart = ({
             
             return true;
         } catch (error) {
-            // Handle API error
             console.error('Add to cart API error:', error);
             
             const errorMessage = error.response?.data?.message || 'Failed to add item to cart. Please try again.';
-            
-            // Error callback
             onError(errorMessage);
-            
-            // Show error message
             if (showAlert) {
                 Swal.fire({
                     icon: 'error',

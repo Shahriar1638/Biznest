@@ -18,10 +18,8 @@ const Profile = () => {
     };
 
     const handleSave = () => {
-        // Here you would typically make an API call to update user data
         console.log('Saving user data:', editedUser);
         setIsEditing(false);
-        // Update the user context with new data
     };
 
     const handleCancel = () => {

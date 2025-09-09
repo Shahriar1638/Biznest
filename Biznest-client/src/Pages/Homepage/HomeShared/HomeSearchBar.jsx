@@ -38,23 +38,17 @@ const HomeSearchBar = ({ categories }) => {
         }
     };
 
-    // Clear search results when search query is empty
     const handleInputChange = (e) => {
         const value = e.target.value;
         setSearchQuery(value);
-        
-        // Clear results if search query becomes empty
         if (!value.trim() && !selectedCategory) {
             setSearchResults([]);
         }
     };
 
-    // Handle category change
     const handleCategoryChange = async (e) => {
         const value = e.target.value;
         setSelectedCategory(value);
-        
-        // If there's a search query or category selected, perform search
         if (searchQuery.trim() || value) {
             setLoading(true);
             try {

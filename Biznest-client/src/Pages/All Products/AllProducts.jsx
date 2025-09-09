@@ -9,10 +9,8 @@ const AllProducts = () => {
     const [selectedCategory, setSelectedCategory] = useState('all');
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
-    // Check if current user is a seller
     const isSeller = user?.role?.type === 'seller';
 
-    // TanStack Query for fetching products using custom hook
     const {
         data: products = [],
         isLoading: loading,
@@ -20,7 +18,6 @@ const AllProducts = () => {
         refetch
     } = useProducts(selectedCategory);
 
-    // Categories list
     const categories = [
         { id: 'all', name: 'All Products', icon: '🛍️' },
         { id: 'Groceries & Pantry', name: 'Groceries & Pantry', icon: '🛒' },
@@ -35,10 +32,9 @@ const AllProducts = () => {
         { id: 'Home & Garden', name: 'Home & Garden', icon: '🌱' }
     ];
 
-    // Handle category selection - this will trigger a new query
     const handleCategorySelect = (categoryId) => {
         setSelectedCategory(categoryId);
-        setSidebarOpen(false); // Close sidebar on mobile after selection
+        setSidebarOpen(false); 
     };
 
     return (

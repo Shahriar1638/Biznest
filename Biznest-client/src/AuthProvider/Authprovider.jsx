@@ -7,8 +7,8 @@ const Authprovider = ({children}) => {
     const [ user, setUser ] = useState(null)
     const [ loading, setLoading ] = useState(true)
     const axiosPublic = useAxiosPublic();
+    const navigate = Navigate();
 
-    // Check for existing user session on component mount
     useEffect(() => {
         const checkAuthState = async () => {
             const token = localStorage.getItem('access-token');
@@ -16,7 +16,6 @@ const Authprovider = ({children}) => {
             
             if (token && savedUser) {
                 try {
-                    // Verify token is still valid
                     const response = await axiosPublic.get('/auth/verify-token', {
                         headers: {
                             authorization: `Bearer ${token}`
@@ -26,12 +25,10 @@ const Authprovider = ({children}) => {
                     if (response.data.valid) {
                         setUser(JSON.parse(savedUser));
                     } else {
-                        // Token is invalid, clear storage
                         localStorage.removeItem('access-token');
                         localStorage.removeItem('user-info');
                     }
                 } catch (error) {
-                    // Token verification failed, clear storage
                     localStorage.removeItem('access-token');
                     localStorage.removeItem('user-info');
                     console.error('Token verification failed:', error);
@@ -50,7 +47,6 @@ const Authprovider = ({children}) => {
                 const userData = res.data.user;
                 const token = res.data.token;
                 
-                // Store user info and token in localStorage
                 localStorage.setItem('user-info', JSON.stringify(userData));
                 localStorage.setItem('access-token', token);
                 
@@ -80,7 +76,6 @@ const Authprovider = ({children}) => {
             })
     }
 
-    // Function to update user data in both state and localStorage
     const updateUser = (updatedUserData) => {
         setUser(updatedUserData);
         localStorage.setItem('user-info', JSON.stringify(updatedUserData));
@@ -90,13 +85,12 @@ const Authprovider = ({children}) => {
         setLoading(true)
         return axiosPublic.post('/auth/logout')
             .then(() => {
-                // Clear user info and token from localStorage
                 localStorage.removeItem('user-info');
                 localStorage.removeItem('access-token');
                 
                 setUser(null)
                 setLoading(false)
-                Navigate('/')
+                navigate('/')
             })
             .catch(err => {
                 // Even if logout fails on server, clear local storage

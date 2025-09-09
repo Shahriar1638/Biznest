@@ -10,7 +10,6 @@ const ReplyContactMsg = () => {
     const [isLoading, setIsLoading] = useState(true);
     const axiosPublic = useAxiosPublic();
 
-    // Fetch contact messages when component loads
     const fetchContactMessages = useCallback(async () => {
         if (!user?.email) return;
         
@@ -40,7 +39,6 @@ const ReplyContactMsg = () => {
         fetchContactMessages();
     }, [fetchContactMessages]);
 
-    // Truncate text for table display
     const truncateText = (text, maxLength = 50) => {
         if (!text) return 'No message';
         if (text.length <= maxLength) return text;
@@ -71,7 +69,6 @@ const ReplyContactMsg = () => {
 
     // Handle view more button click
     const handleViewMore = (message) => {
-        // Create detailed message content for SweetAlert
         const messageContent = `
             <div class="text-left space-y-4">
                 <div class="border-b pb-3 mb-3">

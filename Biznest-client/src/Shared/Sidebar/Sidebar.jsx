@@ -7,11 +7,9 @@ const Sidebar = ({ isOpen, onClose }) => {
     const location = useLocation();
     const [isCollapsed, setIsCollapsed] = useState(false);
 
-    // Check user role
     const isAdmin = user?.role?.type === 'admin';
     const isSeller = user?.role?.type === 'seller';
 
-    // Admin menu items
     const adminMenuItems = [
         {
             title: 'Product Management',
@@ -33,7 +31,6 @@ const Sidebar = ({ isOpen, onClose }) => {
         }
     ]
 
-    // Seller menu items
     const sellerMenuItems = [
         {
             title: 'My Products',
@@ -49,15 +46,11 @@ const Sidebar = ({ isOpen, onClose }) => {
         }
     ];
 
-    // Get menu items based on user role
     const menuItems = isAdmin ? adminMenuItems : isSeller ? sellerMenuItems : [];
-
-    // Check if path is active
     const isActivePath = (path) => {
         return location.pathname === path || location.pathname.startsWith(path + '/');
     };
 
-    // Handle logout
     const handleLogout = async () => {
         try {
             await logOut();
@@ -264,7 +257,7 @@ const MenuItem = ({ item, isCollapsed, isActive, onItemClick }) => {
                 </Link>
             )}
 
-            {/* Submenu Items */}
+            {/* Submenu Items
             {hasChildren && !isCollapsed && isExpanded && (
                 <div className="ml-6 mt-2 space-y-1">
                     {item.children.map((child, index) => (
@@ -282,7 +275,7 @@ const MenuItem = ({ item, isCollapsed, isActive, onItemClick }) => {
                         </Link>
                     ))}
                 </div>
-            )}
+            )} */}
         </div>
     );
 };

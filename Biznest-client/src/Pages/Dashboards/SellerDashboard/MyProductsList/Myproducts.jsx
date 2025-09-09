@@ -11,7 +11,6 @@ const MyProducts = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('all');
 
-    // Fetch seller's products
     const { 
         data: productsData = null, 
         isLoading, 
@@ -25,14 +24,12 @@ const MyProducts = () => {
             return response.data;
         },
         enabled: !!user?.email,
-        staleTime: 5 * 60 * 1000, // 5 minutes
-        cacheTime: 10 * 60 * 1000, // 10 minutes
+        staleTime: 5 * 60 * 1000,
+        cacheTime: 10 * 60 * 1000,
     });
 
-    // Extract products array from the response
     const products = productsData?.products || [];
 
-    // Filter products based on search and category
     const filteredProducts = products.filter(product => {
         const matchesSearch = product.product_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                              product.productId?.toLowerCase().includes(searchTerm.toLowerCase());
@@ -40,26 +37,20 @@ const MyProducts = () => {
         return matchesSearch && matchesCategory;
     });
 
-    // Get unique categories for filter
     const categories = ['all', ...new Set(products.map(product => product.category).filter(Boolean))];
 
-    // Handle action buttons (placeholder functions)
     const handleAddStock = (productId) => {
         console.log('Add stock for product:', productId);
-        // Placeholder - will implement later
     };
 
     const handleEditProduct = (productId) => {
         console.log('Edit product:', productId);
-        // Placeholder - will implement later
     };
 
     const handleRemoveProduct = (productId) => {
         console.log('Remove product:', productId);
-        // Placeholder - will implement later
     };
 
-    // Loading state
     if (isLoading) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -71,7 +62,6 @@ const MyProducts = () => {
         );
     }
 
-    // Error state
     if (error) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">

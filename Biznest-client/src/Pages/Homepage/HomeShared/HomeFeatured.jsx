@@ -17,11 +17,8 @@ const HomeFeatured = ({
     const [internalLoading, setInternalLoading] = useState(false);
     const axiosPublic = useAxiosPublic();
 
-    // Use external data if provided, otherwise fetch internal data
     const displayProducts = products !== null ? products : internalProducts;
     const isLoading = externalLoading !== null ? externalLoading : internalLoading;
-
-    // Fetch featured products only if no external data is provided
     useEffect(() => {
         if (products === null) {
             const fetchFeaturedProducts = async () => {

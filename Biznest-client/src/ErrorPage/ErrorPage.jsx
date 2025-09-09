@@ -10,16 +10,14 @@ const ErrorPage = () => {
 
     const handleGoHome = () => {
         if (!user) {
-            // No user logged in - go to DefaultHome
             navigate('/');
         } else if (user.role?.type === 'customer') {
-            // Customer logged in - go to customer home
             navigate('/customer-home');
         } else if (user.role?.type === 'seller') {
-            // Seller logged in - go to seller home
             navigate('/seller-home');
+        } else if (user.role?.type === 'admin') {
+            navigate('/admin/dashboard');
         } else {
-            // Fallback to default home
             navigate('/');
         }
     };

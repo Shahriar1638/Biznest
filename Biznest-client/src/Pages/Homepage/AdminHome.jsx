@@ -5,7 +5,6 @@ import { PrimaryButton, SecondaryButton } from '../../Components/Buttons';
 const AdminHome = () => {
     const { user } = useAuth();
 
-    // Sample admin data based on dummy.json structure
     const adminStats = {
         totalUsers: 5,
         totalSellers: 2,
@@ -14,7 +13,7 @@ const AdminHome = () => {
         pendingProducts: 8,
         approvedProducts: 32,
         rejectedProducts: 1,
-        totalRevenue: 21251.25, // Combined seller revenues from dummy.json
+        totalRevenue: 21251.25,
         salary: user?.role?.details?.salary || 75000
     };
 

@@ -11,7 +11,6 @@ import HomeFeatured from './HomeShared/HomeFeatured';
 const CustomerHome = () => {
     const { user } = useAuth();
     
-    // TanStack Query hooks for data fetching
     const {
         data: recommendedProducts = [],
         isLoading: recommendedLoading
@@ -22,10 +21,8 @@ const CustomerHome = () => {
         isLoading: wishlistLoading
     } = useWishlist();
 
-    // Combined loading state
     const loading = recommendedLoading || wishlistLoading;
 
-    // Categories with icons (reused from DefaultHome)
     const categories = [
         { name: 'Groceries & Pantry', icon: '🛒', color: 'bg-green-100 text-green-700' },
         { name: 'Kids & Baby', icon: '👶', color: 'bg-pink-100 text-pink-700' },

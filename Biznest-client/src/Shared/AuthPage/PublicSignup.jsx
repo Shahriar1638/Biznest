@@ -68,7 +68,6 @@ const PublicSignup = () => {
         setIsLoading(true);
 
         try {
-            // Remove confirmPassword before sending
             const { confirmPassword: _, ...submitData } = formData;
             await signupUser(submitData);
             navigate('/');

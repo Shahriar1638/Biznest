@@ -12,7 +12,6 @@ const ShowCart = () => {
     const navigate = useNavigate();
     const [isUpdating, setIsUpdating] = useState(false);
 
-    // Fetch cart data using TanStack Query
     const { 
         data: cartData, 
         isLoading, 
@@ -38,8 +37,6 @@ const ShowCart = () => {
         refetchOnWindowFocus: true,
         refetchOnMount: true,
     });
-
-    // Fetch all products to get product details
     const { 
         data: allProducts,
         isLoading: isProductsLoading 
@@ -53,32 +50,27 @@ const ShowCart = () => {
         cacheTime: 30 * 60 * 1000,
     });
 
-    // Helper function to get product details by productId
     const getProductDetails = (productId) => {
         if (!allProducts) return null;
         return allProducts.find(product => product.productId === productId);
     };
 
-    // Helper function to get unit details by unitid from product
     const getUnitDetails = (productId, unitid) => {
         const product = getProductDetails(productId);
         if (!product?.quantity_description) return null;
         return product.quantity_description.find(unit => unit.unitid === unitid);
     };
 
-    // Helper function to check if an item is out of stock
     const isItemOutOfStock = (cartItem) => {
         const unitDetails = getUnitDetails(cartItem.productId, cartItem.unitid);
         return unitDetails?.unit_quantity === 0;
     };
 
-    // Helper function to check if any item in cart is out of stock
     const hasOutOfStockItems = () => {
         if (!cartData?.cart_details) return false;
         return cartData.cart_details.some(item => isItemOutOfStock(item));
     };
 
-    // Calculate total price for all items
     const calculateTotal = () => {
         if (!cartData?.cart_details || !allProducts) return 0;
         return cartData.cart_details.reduce((total, cartItem) => {
@@ -89,11 +81,9 @@ const ShowCart = () => {
         }, 0);
     };
 
-    // Handle quantity update
     const handleQuantityUpdate = async (cartItem, newQuantity) => {
         console.log('Updating quantity for item:', cartItem, 'to new quantity:', newQuantity);
         
-        // Validate inputs
         if (newQuantity < 1) {
             Swal.fire({
                 icon: 'warning',
@@ -103,7 +93,6 @@ const ShowCart = () => {
             return;
         }
 
-        // Check if the new quantity is the same as current
         if (cartItem.unitquantity === newQuantity) {
             console.log('Quantity is the same, no update needed');
             return;
@@ -122,13 +111,12 @@ const ShowCart = () => {
                 customeremail: user.email,
                 unitid: cartItem.unitid,
                 productId: cartItem.productId,
-                newQuantity: parseInt(newQuantity) // Ensure it's an integer
+                newQuantity: parseInt(newQuantity)
             });
             
             console.log('Update response:', response.data);
             
             if (response.data.success) {
-                // Refetch cart data
                 await refetch();
                 
                 Swal.fire({
@@ -146,7 +134,6 @@ const ShowCart = () => {
         } catch (error) {
             console.error('Update quantity error:', error);
             
-            // Enhanced error handling
             let errorMessage = 'Failed to update quantity. Please try again.';
             
             if (error.response?.data?.message) {
@@ -168,7 +155,6 @@ const ShowCart = () => {
 
     // Handle remove item
     const handleRemoveItem = async (cartItem) => {
-        // Get product and unit details for better confirmation message
         const productDetails = getProductDetails(cartItem.productId);
         const unitDetails = getUnitDetails(cartItem.productId, cartItem.unitid);
         
@@ -197,13 +183,12 @@ const ShowCart = () => {
                     data: {
                         customeremail: user.email,
                         productId: cartItem.productId,
-                        unitid: cartItem.unitid // Now sending unitid to remove only specific variant
+                        unitid: cartItem.unitid
                     }
                 });
                 
                 console.log('Remove response:', response.data);
                 
-                // Refetch cart data
                 await refetch();
                 
                 Swal.fire({
@@ -233,7 +218,6 @@ const ShowCart = () => {
         }
     };
 
-    // Handle proceed to checkout
     const handleCheckout = () => {
         if (!cartData?.cart_details || cartData.cart_details.length === 0) {
             Swal.fire({
@@ -244,18 +228,16 @@ const ShowCart = () => {
             return;
         }
 
-        // Navigate to payment page with cart data
         console.log('Proceeding to payment with cart items:', cartData.cart_details);
         navigate('/payment', { 
             state: { 
                 cartData: cartData.cart_details,
-                totalAmount: calculateTotal() + 50, // Including shipping
+                totalAmount: calculateTotal() + 50,
                 userEmail: user.email
             } 
         });
     };
 
-    // Loading state
     if (isLoading || isProductsLoading) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -267,7 +249,6 @@ const ShowCart = () => {
         );
     }
 
-    // Error state
     if (error) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -285,7 +266,6 @@ const ShowCart = () => {
         );
     }
 
-    // Empty cart state
     if (!cartData?.cart_details || cartData.cart_details.length === 0) {
         return (
             <div className="min-h-screen bg-gray-50">

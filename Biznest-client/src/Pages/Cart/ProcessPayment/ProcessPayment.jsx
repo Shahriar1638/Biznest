@@ -11,8 +11,6 @@ import { PrimaryButton, SecondaryButton } from '../../../Components/Buttons';
 import useAuth from '../../../Hooks/useAuth';
 import useAxiosSecure from '../../../Hooks/useAxiosSecure';
 import Swal from 'sweetalert2';
-
-// Initialize Stripe with environment variable
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_API_KEY);
 
 const PaymentForm = ({ cartData, totalAmount, onPaymentSuccess, onCancel }) => {
@@ -25,7 +23,6 @@ const PaymentForm = ({ cartData, totalAmount, onPaymentSuccess, onCancel }) => {
     const [paymentError, setPaymentError] = useState(null);
     const [cardComplete, setCardComplete] = useState(false);
     
-    // Form state for billing information
     const [billingInfo, setBillingInfo] = useState({
         email: user?.email || '',
         name: user?.username || user?.displayName || '',
@@ -38,7 +35,6 @@ const PaymentForm = ({ cartData, totalAmount, onPaymentSuccess, onCancel }) => {
         }
     });
 
-    // Update billing info when user data becomes available
     useEffect(() => {
         if (user) {
             setBillingInfo(prev => ({
@@ -90,7 +86,6 @@ const PaymentForm = ({ cartData, totalAmount, onPaymentSuccess, onCancel }) => {
         const cardElement = elements.getElement(CardElement);
 
         try {
-            // Create payment method
             const { error, paymentMethod } = await stripe.createPaymentMethod({
                 type: 'card',
                 card: cardElement,
@@ -114,7 +109,7 @@ const PaymentForm = ({ cartData, totalAmount, onPaymentSuccess, onCancel }) => {
                 productid: item.productId,
                 unitId: item.unitid,
                 quantity: item.unitquantity,
-                price: 0 // Will need to be calculated from product details
+                price: 0
             })) || [];
 
             const paymentData = {
@@ -127,7 +122,7 @@ const PaymentForm = ({ cartData, totalAmount, onPaymentSuccess, onCancel }) => {
                 itemcount: cartData?.length || 0,
                 currency: 'bdt',
                 payment_date: payment_date,
-                paymentMethodId: paymentMethod.id, // Add Stripe payment method ID
+                paymentMethodId: paymentMethod.id,
                 billingrelated_infos: {
                     name: billingInfo.name,
                     city: billingInfo.address.city,
@@ -138,11 +133,9 @@ const PaymentForm = ({ cartData, totalAmount, onPaymentSuccess, onCancel }) => {
                 cartitems: processedCartItems
             };
 
-            // Send payment data to backend API
             const response = await axiosSecure.post('/user/process-payment', paymentData);
             
             if (response.data.success) {
-                // Show success message
                 Swal.fire({
                     icon: 'success',
                     title: 'Payment Successful!',
@@ -160,7 +153,6 @@ const PaymentForm = ({ cartData, totalAmount, onPaymentSuccess, onCancel }) => {
         } catch (error) {
             console.error('Payment processing error:', error);
             
-            // Handle different types of errors
             if (error.response?.data?.error_type === 'card_error') {
                 setPaymentError(error.response.data.message);
             } else if (error.response?.data?.message) {
@@ -434,13 +426,10 @@ const ProcessPayment = () => {
                         totalAmount={totalAmount}
                         userEmail={userEmail}
                         onPaymentSuccess={() => {
-                            // Handle successful payment
                             console.log('Payment successful!');
-                            // navigate('/customer-home');
                         }}
                         onCancel={() => {
-                            // Navigate back to cart
-                            navigate('/cart');
+                            navigate('/customer-home');
                         }}
                     />
                 </Elements>

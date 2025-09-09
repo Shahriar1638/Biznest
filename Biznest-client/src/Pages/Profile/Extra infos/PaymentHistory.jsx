@@ -10,7 +10,6 @@ const PaymentHistory = () => {
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [showModal, setShowModal] = useState(false);
 
-  // Fetch payment history
   const { data: paymentHistory = [], isLoading, error, refetch } = useQuery({
     queryKey: ['paymentHistory', user?.email],
     queryFn: async () => {

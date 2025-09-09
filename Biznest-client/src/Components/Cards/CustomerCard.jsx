@@ -15,7 +15,7 @@ const CustomerCard = ({ product, showWishlist = true, showAddToCart = true }) =>
     const { user, updateUser } = useAuth();
     const axiosSecure = useAxiosSecure();
 
-    // Check if product is in wishlist when component mounts
+    // check existing wish list status
     useEffect(() => {
         const checkWishlistStatus = () => {
             if (!user?.email || user.role?.type !== 'customer') {
@@ -31,7 +31,6 @@ const CustomerCard = ({ product, showWishlist = true, showAddToCart = true }) =>
         checkWishlistStatus();
     }, [user, product.productId]);
 
-    // Initialize AddToCart hook
     const addToCartHook = AddToCart({ 
         product, 
         selectedQuantity,
@@ -59,22 +58,18 @@ const CustomerCard = ({ product, showWishlist = true, showAddToCart = true }) =>
 
         try {
             setIsWishlistLoading(true);
-            
-            // Send the productId to the wishlist API with user email
+            // wishlist toggle API
             const response = await axiosSecure.post(`/user/wishlist/${product.productId}`, {
                 userEmail: user.email
             });
             
             if (response.data.success) {
-                // Update the state based on the action returned from API
                 const newWishlistState = response.data.action === 'added';
                 setIsWishlisted(newWishlistState);
                 
-                // Update user data in localStorage and state
                 if (user && user.role && user.role.type === 'customer') {
                     const updatedUser = { ...user };
                     
-                    // Initialize wishlist if it doesn't exist
                     if (!updatedUser.role.details.wishlist) {
                         updatedUser.role.details.wishlist = [];
                     }
@@ -129,7 +124,6 @@ const CustomerCard = ({ product, showWishlist = true, showAddToCart = true }) =>
         setSelectedQuantity(e.target.value);
     };
 
-    // Calculate average rating from the rating array
     const calculateAverageRating = () => {
         if (!product.rating || product.rating.length === 0) return 0;
         const sum = product.rating.reduce((acc, ratingObj) => acc + ratingObj.rate, 0);

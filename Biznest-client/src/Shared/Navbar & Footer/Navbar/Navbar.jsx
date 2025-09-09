@@ -7,7 +7,6 @@ import logo from '../../../assets/logo.png';
 const Navbar = () => {
     const { user, logOut } = useAuth();
 
-    // Function to get home route based on user type
     const getHomeRoute = () => {
         if (!user) return '/';
         

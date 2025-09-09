@@ -8,7 +8,6 @@ const AddProducts = () => {
     const axiosSecure = useAxiosSecure();
     const [loading, setLoading] = useState(false);
 
-    // Form state
     const [formData, setFormData] = useState({
         product_name: '',
         product_imgurl: '',
@@ -24,7 +23,6 @@ const AddProducts = () => {
         ]
     });
 
-    // Categories from your products.json
     const categories = [
         'Electronics & Gadgets',
         'Health & Personal Care',
@@ -38,7 +36,6 @@ const AddProducts = () => {
         'Kids & Baby'
     ];
 
-    // Unit types from your products.json
     const unitTypes = [
         'pieces-pcs',
         'gram-g',
@@ -101,24 +98,21 @@ const AddProducts = () => {
         setLoading(true);
 
         try {
-            // Generate product ID
             const productId = `PRD${String(Math.floor(Math.random() * 900) + 100)}`;
             
-            // Prepare product details object
             const productdetails = {
                 productId,
                 selleremail: user?.email,
                 product_name: formData.product_name,
                 product_imgurl: formData.product_imgurl,
                 quantity_description: formData.quantity_description,
-                product_publishdate: new Date().toISOString().split('T')[0], // Current date in YYYY-MM-DD format
+                product_publishdate: new Date().toISOString().split('T')[0],
                 category: formData.category,
-                product_status: 'pending', // Default status
-                rating: [], // Empty array for new products
-                sell_count: [] // Empty array for new products
+                product_status: 'pending',
+                rating: [],
+                sell_count: []
             };
 
-            // Send to API
             const response = await axiosSecure.post('/seller/addproduct', { productdetails });
             
             if (response.data.success) {
@@ -128,7 +122,6 @@ const AddProducts = () => {
                     text: 'Product added successfully!',
                     confirmButtonColor: '#f59e0b'
                 });
-                // Reset form
                 setFormData({
                     product_name: '',
                     product_imgurl: '',
