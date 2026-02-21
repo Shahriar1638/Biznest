@@ -1,18 +1,21 @@
 const express = require('express');
 const router = express.Router();
+const verifyToken = require('../middlewares/verifyToken');
+const verifyAdmin = require('../middlewares/verifyAdmin');
 
 module.exports = (productCollection, userCollection, contactCollection) => {
 
     // Update product status - Admin only
-    router.put('/products/status', async (req, res) => {
+    router.put('/products/status', verifyToken, verifyAdmin(userCollection), async (req, res) => {
         try {
-            const { productId, status, adminEmail } = req.body;
+            const { productId, status } = req.body;
+            const adminEmail = req.decoded.email; // Get email from token
 
             // Validate required fields
-            if (!productId || !status || !adminEmail) {
+            if (!productId || !status) {
                 return res.status(400).json({
                     success: false,
-                    message: 'Product ID, status, and admin email are required'
+                    message: 'Product ID and status are required'
                 });
             }
 
@@ -22,19 +25,6 @@ module.exports = (productCollection, userCollection, contactCollection) => {
                 return res.status(400).json({
                     success: false,
                     message: `Invalid status. Must be one of: ${validStatuses.join(', ')}`
-                });
-            }
-
-            // Verify admin authorization
-            const admin = await userCollection.findOne({ 
-                email: adminEmail,
-                'role.type': 'admin'
-            });
-
-            if (!admin) {
-                return res.status(403).json({
-                    success: false,
-                    message: 'Unauthorized: Admin access required'
                 });
             }
 
@@ -93,24 +83,9 @@ module.exports = (productCollection, userCollection, contactCollection) => {
     });
 
     // Get all products for admin review
-    router.get('/products', async (req, res) => {
+    router.get('/products', verifyToken, verifyAdmin(userCollection), async (req, res) => {
         try {
-            const { adminEmail, status } = req.query;
-
-            // Verify admin authorization
-            if (adminEmail) {
-                const admin = await userCollection.findOne({ 
-                    email: adminEmail,
-                    'role.type': 'admin'
-                });
-
-                if (!admin) {
-                    return res.status(403).json({
-                        success: false,
-                        message: 'Unauthorized: Admin access required'
-                    });
-                }
-            }
+            const { status } = req.query;
 
             // Build filter
             const filter = {};
@@ -142,24 +117,9 @@ module.exports = (productCollection, userCollection, contactCollection) => {
     });
 
     // Get all contact messages for admin review
-    router.get('/contacts', async (req, res) => {
+    router.get('/contacts', verifyToken, verifyAdmin(userCollection), async (req, res) => {
         try {
-            const { adminEmail, status } = req.query;
-
-            // Verify admin authorization
-            if (adminEmail) {
-                const admin = await userCollection.findOne({ 
-                    email: adminEmail,
-                    'role.type': 'admin'
-                });
-
-                if (!admin) {
-                    return res.status(403).json({
-                        success: false,
-                        message: 'Unauthorized: Admin access required'
-                    });
-                }
-            }
+            const { status } = req.query;
 
             // Build filter
             const filter = {};
@@ -191,28 +151,16 @@ module.exports = (productCollection, userCollection, contactCollection) => {
     });
 
     // Reply to contact message - Admin only
-    router.put('/contacts/reply', async (req, res) => {
+    router.put('/contacts/reply', verifyToken, verifyAdmin(userCollection), async (req, res) => {
         try {
-            const { messageId, reply, adminEmail } = req.body;
+            const { messageId, reply } = req.body;
+            const adminEmail = req.decoded.email;
 
             // Validate required fields
-            if (!messageId || !reply || !adminEmail) {
+            if (!messageId || !reply) {
                 return res.status(400).json({
                     success: false,
-                    message: 'Message ID, reply, and admin email are required'
-                });
-            }
-
-            // Verify admin authorization
-            const admin = await userCollection.findOne({ 
-                email: adminEmail,
-                'role.type': 'admin'
-            });
-
-            if (!admin) {
-                return res.status(403).json({
-                    success: false,
-                    message: 'Unauthorized: Admin access required'
+                    message: 'Message ID and reply are required'
                 });
             }
 
@@ -274,25 +222,9 @@ module.exports = (productCollection, userCollection, contactCollection) => {
     });
 
     // Mark contact message as read by admin
-    router.put('/contacts/:id/mark-read', async (req, res) => {
+    router.put('/contacts/:id/mark-read', verifyToken, verifyAdmin(userCollection), async (req, res) => {
         try {
             const { id } = req.params;
-            const { adminEmail } = req.body;
-
-            // Verify admin authorization
-            if (adminEmail) {
-                const admin = await userCollection.findOne({ 
-                    email: adminEmail,
-                    'role.type': 'admin'
-                });
-
-                if (!admin) {
-                    return res.status(403).json({
-                        success: false,
-                        message: 'Unauthorized: Admin access required'
-                    });
-                }
-            }
 
             // Update message to mark as read by admin
             const { ObjectId } = require('mongodb');
@@ -329,25 +261,9 @@ module.exports = (productCollection, userCollection, contactCollection) => {
     });
 
     // Toggle read/unread status for contact message - Admin only
-    router.put('/contacts/:id/toggle-read', async (req, res) => {
+    router.put('/contacts/:id/toggle-read', verifyToken, verifyAdmin(userCollection), async (req, res) => {
         try {
             const { id } = req.params;
-            const { adminEmail } = req.body;
-
-            // Verify admin authorization
-            if (adminEmail) {
-                const admin = await userCollection.findOne({ 
-                    email: adminEmail,
-                    'role.type': 'admin'
-                });
-
-                if (!admin) {
-                    return res.status(403).json({
-                        success: false,
-                        message: 'Unauthorized: Admin access required'
-                    });
-                }
-            }
 
             // Get current message to toggle status
             const { ObjectId } = require('mongodb');

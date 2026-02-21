@@ -1,12 +1,14 @@
 const express = require('express');
 const router = express.Router();
+const verifyToken = require('../middlewares/verifyToken');
+const verifySeller = require('../middlewares/verifySeller');
 
 module.exports = (productCollection, userCollection) => {
 
 // ----------------------------------------------> Get Seller Products Endpoint <------------------------------
-  router.get('/myproducts/:email', async (req, res) => {
+  router.get('/my-products', verifyToken, verifySeller(userCollection), async (req, res) => {
     try {
-      const sellerEmail = req.params.email;
+      const sellerEmail = req.decoded.email;
       console.log('Fetching products for seller:', sellerEmail);
       
       // Find all products for this seller
@@ -38,9 +40,10 @@ module.exports = (productCollection, userCollection) => {
   });
 
 // ----------------------------------------------> Add Product Endpoint <------------------------------
-  router.post('/addproduct', async (req, res) => {
+  router.post('/addproduct', verifyToken, verifySeller(userCollection), async (req, res) => {
     try {
       const { productdetails } = req.body;
+      const sellerEmail = req.decoded.email; // Get secure email
       console.log('Product details received:', productdetails);
       
       // Add creation date to product details
@@ -53,6 +56,7 @@ module.exports = (productCollection, userCollection) => {
       // Add additional fields to product
       const productToInsert = {
         ...productdetails,
+        selleremail: sellerEmail, // Force secure email
         created_date: formattedDate,
         status: 'pending', // Default status for new products
         approved: false

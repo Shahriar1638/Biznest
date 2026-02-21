@@ -1,9 +1,11 @@
 const express = require('express');
+const { ObjectId } = require('mongodb');
+const verifyToken = require('../middlewares/verifyToken');
 
 module.exports = (contactCollection) => {
     const router = express.Router();
 
-    // POST endpoint for contact form submissions
+    // POST endpoint for contact form submissions (Public)
     router.post('/contact', async (req, res) => {
         try {
             const { name, email, userType, issueCategory, subject, message } = req.body;
@@ -67,20 +69,11 @@ module.exports = (contactCollection) => {
         }
     });
 
-    // GET endpoint to retrieve contact messages by email
-    router.get('/contacts/:email', async (req, res) => {
+    // GET endpoint to retrieve contact messages for logged in user
+    router.get('/my-contacts', verifyToken, async (req, res) => {
         try {
-            const { email } = req.params;
+            const email = req.decoded.email; // From token
             
-            // Validate email format
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(email)) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Please provide a valid email address'
-                });
-            }
-
             // Get contact messages for the specific email
             const messages = await contactCollection
                 .find({ email: email.toLowerCase().trim() })
@@ -103,168 +96,15 @@ module.exports = (contactCollection) => {
         }
     });
 
-    // GET endpoint to retrieve all contact messages (for admin use)
-    router.get('/contact/all', async (req, res) => {
-        try {
-            const { status, priority, limit = 50, skip = 0 } = req.query;
-            
-            // Build filter object
-            const filter = {};
-            if (status) filter.status = status;
-            if (priority) filter.priority = priority;
-
-            // Get contact messages with optional filtering
-            const messages = await contactCollection
-                .find(filter)
-                .sort({ createdAt: -1 })
-                .limit(parseInt(limit))
-                .skip(parseInt(skip))
-                .toArray();
-
-            // Get total count for pagination
-            const totalCount = await contactCollection.countDocuments(filter);
-
-            res.status(200).json({
-                success: true,
-                data: messages,
-                pagination: {
-                    total: totalCount,
-                    limit: parseInt(limit),
-                    skip: parseInt(skip),
-                    hasMore: (parseInt(skip) + parseInt(limit)) < totalCount
-                }
-            });
-
-        } catch (error) {
-            console.error('Error fetching contact messages:', error);
-            res.status(500).json({
-                success: false,
-                message: 'Failed to retrieve contact messages',
-                error: process.env.NODE_ENV === 'development' ? error.message : undefined
-            });
-        }
-    });
-
-    // PUT endpoint to update contact message status (for admin use)
-    router.put('/contact/:id/status', async (req, res) => {
+    // PUT endpoint to toggle read status by client (Protected)
+    router.put('/my-contacts/:id/toggle-read', verifyToken, async (req, res) => {
         try {
             const { id } = req.params;
-            const { status, reply, assignedTo } = req.body;
+            const userEmail = req.decoded.email;
             
-            // Validate status
-            const validStatuses = ['pending', 'in-progress', 'resolved'];
-            if (!validStatuses.includes(status)) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Invalid status. Must be one of: pending, in-progress, resolved'
-                });
-            }
-
-            // Build update object
-            const updateData = {
-                status,
-                updatedAt: new Date()
-            };
-
-            if (reply) updateData.reply = reply.trim();
-            if (assignedTo) updateData.assignedTo = assignedTo.trim();
-            if (status === 'resolved') updateData.resolvedAt = new Date();
-
-            // Update contact message
-            const result = await contactCollection.updateOne(
-                { _id: new require('mongodb').ObjectId(id) },
-                { $set: updateData }
-            );
-
-            if (result.matchedCount === 0) {
-                return res.status(404).json({
-                    success: false,
-                    message: 'Contact message not found'
-                });
-            }
-
-            res.status(200).json({
-                success: true,
-                message: 'Contact message updated successfully'
-            });
-
-        } catch (error) {
-            console.error('Error updating contact message:', error);
-            res.status(500).json({
-                success: false,
-                message: 'Failed to update contact message',
-                error: process.env.NODE_ENV === 'development' ? error.message : undefined
-            });
-        }
-    });
-
-    // PUT endpoint to mark message as read by client
-    router.put('/contacts/:id/mark-read', async (req, res) => {
-        try {
-            const { id } = req.params;
-            const { userEmail } = req.body;
-            
-            // Validate input
-            if (!userEmail) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'User email is required'
-                });
-            }
-
-            // Update message to mark as read by client
-            const result = await contactCollection.updateOne(
-                { 
-                    _id: new require('mongodb').ObjectId(id),
-                    email: userEmail.toLowerCase().trim()
-                },
-                { 
-                    $set: { 
-                        msgClientStatus: true,
-                        clientReadAt: new Date()
-                    }
-                }
-            );
-
-            if (result.matchedCount === 0) {
-                return res.status(404).json({
-                    success: false,
-                    message: 'Contact message not found or unauthorized'
-                });
-            }
-
-            res.status(200).json({
-                success: true,
-                message: 'Message marked as read'
-            });
-
-        } catch (error) {
-            console.error('Error marking message as read:', error);
-            res.status(500).json({
-                success: false,
-                message: 'Failed to mark message as read',
-                error: process.env.NODE_ENV === 'development' ? error.message : undefined
-            });
-        }
-    });
-
-    // PUT endpoint to toggle read status by client
-    router.put('/contacts/:id/toggle-read', async (req, res) => {
-        try {
-            const { id } = req.params;
-            const { userEmail } = req.body;
-            
-            // Validate input
-            if (!userEmail) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'User email is required'
-                });
-            }
-
             // Get current message status
             const currentMessage = await contactCollection.findOne({
-                _id: new require('mongodb').ObjectId(id),
+                _id: new ObjectId(id),
                 email: userEmail.toLowerCase().trim()
             });
 
@@ -291,7 +131,7 @@ module.exports = (contactCollection) => {
             // Update message
             const result = await contactCollection.updateOne(
                 { 
-                    _id: new require('mongodb').ObjectId(id),
+                    _id: new ObjectId(id),
                     email: userEmail.toLowerCase().trim()
                 },
                 { $set: updateData }

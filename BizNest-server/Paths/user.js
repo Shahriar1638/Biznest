@@ -1,13 +1,15 @@
 const express = require('express');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const router = express.Router();
+const verifyToken = require('../middlewares/verifyToken');
 
 module.exports = (cartCollection, paymentCollection, productCollection, userCollection) => {
 
 // ----------------------------------------------> Cart API Endpoint <------------------------------
-  router.post('/cart', async (req, res) => {
+  router.post('/cart', verifyToken, async (req, res) => {
     try {
       const UseCart = req.body;
+      const customeremail = req.decoded.email; // Secure email
       console.log('Cart data received:', UseCart);
       
       // Add current date as added_date in dd-mm-yyyy format
@@ -17,7 +19,7 @@ module.exports = (cartCollection, paymentCollection, productCollection, userColl
       const year = currentDate.getFullYear();
       const formattedDate = `${day}-${month}-${year}`;
       
-      const { customeremail, selleremail, unitid, productId, unitquantity } = UseCart;
+      const { selleremail, unitid, productId, unitquantity } = UseCart;
       
       // Check if cart already exists for this customer
       const existingCart = await cartCollection.findOne({ customeremail });
@@ -110,9 +112,9 @@ module.exports = (cartCollection, paymentCollection, productCollection, userColl
   });
 
 // ----------------------------------------------> Get User Cart Endpoint <------------------------------
-  router.get('/:email/showcart', async (req, res) => {
+  router.get('/cart', verifyToken, async (req, res) => {
     try {
-      const customerEmail = req.params.email;
+      const customerEmail = req.decoded.email; // Secure Email
       console.log('Fetching cart for user:', customerEmail);
       
       // Find cart for this customer
@@ -143,16 +145,17 @@ module.exports = (cartCollection, paymentCollection, productCollection, userColl
   });
 
 // ----------------------------------------------> Update Cart Item Quantity Endpoint <------------------------------
-  router.put('/cart/update-quantity', async (req, res) => {
+  router.put('/cart/update-quantity', verifyToken, async (req, res) => {
     try {
-      const { customeremail, unitid, productId, newQuantity } = req.body;
+      const { unitid, productId, newQuantity } = req.body;
+      const customeremail = req.decoded.email;
       console.log('Update quantity request:', { customeremail, unitid, productId, newQuantity });
       
       // Validate required fields
-      if (!customeremail || !unitid || !productId || !newQuantity) {
+      if (!unitid || !productId || !newQuantity) {
         return res.status(400).json({
           success: false,
-          message: 'Missing required fields: customeremail, unitid, productId, and newQuantity are required'
+          message: 'Missing required fields: unitid, productId, and newQuantity are required'
         });
       }
       
@@ -257,16 +260,17 @@ module.exports = (cartCollection, paymentCollection, productCollection, userColl
   });
 
 // ----------------------------------------------> Remove Cart Item Endpoint <------------------------------
-  router.delete('/cart/remove-item', async (req, res) => {
+  router.delete('/cart/remove-item', verifyToken, async (req, res) => {
     try {
-      const { customeremail, productId, unitid } = req.body;
+      const { productId, unitid } = req.body;
+      const customeremail = req.decoded.email;
       console.log('Remove item request:', { customeremail, productId, unitid });
       
       // Validate required fields
-      if (!customeremail || !productId || !unitid) {
+      if (!productId || !unitid) {
         return res.status(400).json({
           success: false,
-          message: 'Missing required fields: customeremail, productId, and unitid are required'
+          message: 'Missing required fields: productId and unitid are required'
         });
       }
       
@@ -358,9 +362,14 @@ module.exports = (cartCollection, paymentCollection, productCollection, userColl
   });
 
 // ----------------------------------------------> Process Payment Endpoint <------------------------------
-  router.post('/process-payment', async (req, res) => {
+  router.post('/process-payment', verifyToken, async (req, res) => {
     try {
       const paymentData = req.body;
+      // Ensure customer_email is from token to prevent spoofing
+      // Alternatively, just trust the client payload IF using stripe we should verify. 
+      // But keeping it consistent:
+      paymentData.customer_email = req.decoded.email;
+
       console.log('Payment data received:', paymentData);
       
       // Extract payment method and amount for Stripe
@@ -601,9 +610,9 @@ module.exports = (cartCollection, paymentCollection, productCollection, userColl
   });
 
 // ----------------------------------------------> Get Payment History Endpoint <------------------------------
-  router.get('/paymenthistory/:email', async (req, res) => {
+  router.get('/payment-history', verifyToken, async (req, res) => {
     try {
-      const customerEmail = req.params.email;
+      const customerEmail = req.decoded.email; // Secure email
       console.log('Fetching payment history for user:', customerEmail);
       
       // Find all payments for this customer, sorted by date (newest first)
@@ -637,19 +646,12 @@ module.exports = (cartCollection, paymentCollection, productCollection, userColl
   });
 
 // ----------------------------------------------> Add/Remove Wishlist Item Endpoint <------------------------------
-  router.post('/wishlist/:productId', async (req, res) => {
+  router.post('/wishlist/:productId', verifyToken, async (req, res) => {
     try {
       const { productId } = req.params;
-      const userEmail = req.body.userEmail || req.user?.email; // Get from body or JWT token
+      const userEmail = req.decoded.email;
       
       console.log('Wishlist request for product:', productId, 'by user:', userEmail);
-      
-      if (!userEmail) {
-        return res.status(400).json({
-          success: false,
-          message: 'User email is required'
-        });
-      }
       
       if (!productId) {
         return res.status(400).json({
@@ -741,9 +743,9 @@ module.exports = (cartCollection, paymentCollection, productCollection, userColl
   });
 
 // ----------------------------------------------> Get User Wishlist Endpoint <------------------------------
-  router.get('/wishlist/:email', async (req, res) => {
+  router.get('/wishlist', verifyToken, async (req, res) => {
     try {
-      const userEmail = req.params.email;
+      const userEmail = req.decoded.email;
       console.log('Fetching wishlist for user:', userEmail);
       
       // Find the user
