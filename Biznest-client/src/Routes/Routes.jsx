@@ -20,95 +20,149 @@ import ALLProductsAdmin from "../Pages/Dashboards/AdminDashboard/All Prodcuts Ad
 import RegisterAdmin from "../Pages/Dashboards/AdminDashboard/RegisterAdmin/RegisterAdmin";
 import Feedback from "../Pages/Dashboards/AdminDashboard/FeedBacks/Feedback";
 import DashboardDefault from "../Pages/Dashboards/DashboardDefault";
+import PrivateRoute from "./PrivateRoute";
+import AdminRoute from "./AdminRoute";
+import SellerRoute from "./SellerRoute";
 
 const Routes = createBrowserRouter([
-    {
+  {
+    path: "/",
+    element: <Layout />,
+    errorElement: <ErrorPage />,
+    children: [
+      {
         path: "/",
-        element: <Layout />,
-        errorElement: <ErrorPage />,
-        children: [
-            {
-                path: "/",
-                element: <DefaultHome />
-            },
-            {
-                path: "/customer-home",
-                element: <CustomerHome />
-            },
-            {
-                path: "/seller-home",
-                element: <SellerHome />
-            },
-            {
-                path: "/admin-home",
-                element: <AdminHome />
-            },
-            {
-                path: "/help-nd-support",
-                element: <Help_nd_Support />
-            },
-            {
-                path: "/allproducts",
-                element: <AllProducts />
-            },
-            {
-                path: "/profile",
-                element: <Profile />
-            },
-            {
-                path: "/profile/contact-messages",
-                element: <ReplyContactMsg />
-            },
-            {
-                path: "/cart",
-                element: <ShowCart />
-            },
-            {
-                path: "/payment",
-                element: <ProcessPayment />
-            }
-
-        ]
-    },
-    {
+        element: <DefaultHome />,
+      },
+      {
+        path: "/customer-home",
+        element: (
+          <PrivateRoute>
+            <CustomerHome />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "/seller-home",
+        element: (
+          <SellerRoute>
+            <SellerHome />
+          </SellerRoute>
+        ),
+      },
+      {
+        path: "/admin-home",
+        element: (
+          <AdminRoute>
+            <AdminHome />
+          </AdminRoute>
+        ),
+      },
+      {
+        path: "/help-nd-support",
+        element: <Help_nd_Support />,
+      },
+      {
+        path: "/allproducts",
+        element: <AllProducts />,
+      },
+      {
+        path: "/profile",
+        element: (
+          <PrivateRoute>
+            <Profile />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "/profile/contact-messages",
+        element: (
+          <PrivateRoute>
+            <ReplyContactMsg />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "/cart",
+        element: (
+          <PrivateRoute>
+            <ShowCart />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "/payment",
+        element: (
+          <PrivateRoute>
+            <ProcessPayment />
+          </PrivateRoute>
+        ),
+      },
+    ],
+  },
+  {
+    path: "/dashboard",
+    element: (
+      <PrivateRoute>
+        <DashboardLayout />
+      </PrivateRoute>
+    ),
+    errorElement: <ErrorPage />,
+    children: [
+      {
         path: "/dashboard",
-        element: <DashboardLayout />,
-        errorElement: <ErrorPage />,
-        children: [
-            {
-                path: "/dashboard",
-                element: <DashboardDefault />
-            },
-            {
-                path: "/dashboard/seller/products",
-                element: <MyProducts />
-            },
-            {
-                path: "/dashboard/seller/add-product",
-                element: <AddProducts />
-            },
-            {
-                path: "/dashboard/admin/products",
-                element: <ALLProductsAdmin />
-            },
-            {
-                path: "/dashboard/admin/register",
-                element: <RegisterAdmin />
-            },
-            {
-                path: "/dashboard/admin/feedback",
-                element: <Feedback />
-            }
-        ]
-    },
-    {
-        path: "/login",
-        element: <Login />
-    },
-    {
-        path: "/signup",
-        element: <PublicSignup />
-    }
+        element: <DashboardDefault />,
+      },
+      {
+        path: "/dashboard/seller/products",
+        element: (
+          <SellerRoute>
+            <MyProducts />
+          </SellerRoute>
+        ),
+      },
+      {
+        path: "/dashboard/seller/add-product",
+        element: (
+          <SellerRoute>
+            <AddProducts />
+          </SellerRoute>
+        ),
+      },
+      {
+        path: "/dashboard/admin/products",
+        element: (
+          <AdminRoute>
+            <ALLProductsAdmin />
+          </AdminRoute>
+        ),
+      },
+      {
+        path: "/dashboard/admin/register",
+        element: (
+          <AdminRoute>
+            <RegisterAdmin />
+          </AdminRoute>
+        ),
+      },
+      {
+        path: "/dashboard/admin/feedback",
+        element: (
+          <AdminRoute>
+            <Feedback />
+          </AdminRoute>
+        ),
+      },
+    ],
+  },
+  {
+    path: "/login",
+    element: <Login />,
+  },
+  {
+    path: "/signup",
+    element: <PublicSignup />,
+  },
 ]);
 
 export default Routes;

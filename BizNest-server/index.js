@@ -11,7 +11,25 @@ const port = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-const uri = `${process.env.DB_URI}`;  
+// Security Middleware
+const helmet = require('helmet');
+app.use(helmet({
+  crossOriginResourcePolicy: false,
+}));
+
+const rateLimit = require('express-rate-limit');
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per `window` (here, per 15 minutes)
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  message: 'Too many requests from this IP, please try again later.'
+});
+
+// Apply the rate limiting middleware to all requests or specific routes
+app.use(limiter);
+
+const uri = `${process.env.DB_URI}`;
 
 const client = new MongoClient(uri, {
   serverApi: {

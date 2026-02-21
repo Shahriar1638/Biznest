@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import useAxiosPublic from '../../../Hooks/useAxiosPublic';
 import { FeatProductCard } from '../../../Components/Cards';
 
-const HomeFeatured = ({ 
-    products = null, 
+const HomeFeatured = ({
+    products = null,
     loading: externalLoading = null,
     title = "Featured Products",
     description = null,
@@ -49,17 +49,17 @@ const HomeFeatured = ({
                         {description}
                     </p>
                 )}
-                
+
                 {isLoading ? (
                     <div className="text-center py-12">
                         <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-amber-600"></div>
                         <p className="mt-4 text-gray-600">Loading featured products...</p>
                     </div>
-                ) : displayProducts.length > 0 ? (
+                ) : Array.isArray(displayProducts) && displayProducts.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                         {displayProducts.slice(0, maxProducts).map((product) => (
-                            <FeatProductCard 
-                                key={product.product_id} 
+                            <FeatProductCard
+                                key={product.product_id}
                                 product={product}
                                 showWishlist={showWishlist}
                                 showAddToCart={showAddToCart}
