@@ -18,8 +18,10 @@ const contactSchema = new mongoose.Schema({
   
   reply: { type: String },
   assignedTo: { type: String },
+  resolvedBy: { type: String },
   
   msgAdminStatus: { type: Boolean, default: false }, // if admin read it
+  adminReadAt: { type: Date },
   msgClientStatus: { type: Boolean, default: false }, // if client read reply
   clientReadAt: { type: Date }
 });

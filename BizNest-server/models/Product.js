@@ -27,7 +27,12 @@ const productSchema = new mongoose.Schema({
   },
   quantity_description: [unitSchema],
   rating: [ratingSchema],
-  sell_count: [String] // Array of emails for users who bought the product
+  sell_count: [String], // Array of emails for users who bought the product
+  created_date: { type: String },
+  status: { type: String },
+  approved: { type: Boolean },
+  statusUpdatedAt: { type: Date },
+  statusUpdatedBy: { type: String }
 }, { 
   timestamps: true 
 });

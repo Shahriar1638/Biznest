@@ -21,11 +21,11 @@ const userSchema = new mongoose.Schema({
       numOfReject: Number
     }
   },
-  username: { type: String, required: true },
+  name: { type: String, required: true },
   password: { type: String, required: true },
   phone_number: { type: String },
   gender: { type: String, enum: ['male', 'female', 'other'] },
-  profileurl: { type: String },
+  photoURL: { type: String },
   address: { type: String },
   ban_status: { type: Boolean, default: false }
 }, { 
