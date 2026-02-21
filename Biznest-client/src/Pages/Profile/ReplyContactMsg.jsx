@@ -6,14 +6,21 @@ import { PrimaryButton, SecondaryButton } from "../../Components/Buttons";
 import { MessageDetailsModal } from "../../Components/Modals";
 
 const ReplyContactMsg = () => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [contactMessages, setContactMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [toggleLoadingStates, setToggleLoadingStates] = useState({});
   const axiosSecure = useAxiosSecure();
 
   const fetchContactMessages = useCallback(async () => {
-    if (!user?.email) return;
+    // Wait for authentication to resolve first
+    if (authLoading) return;
+
+    // If auth finishes and there's no user, clear the loading state and exit
+    if (!user?.email) {
+      setIsLoading(false);
+      return;
+    }
 
     try {
       setIsLoading(true);
@@ -35,7 +42,7 @@ const ReplyContactMsg = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [user?.email, axiosSecure]);
+  }, [user?.email, axiosSecure, authLoading]);
 
   useEffect(() => {
     fetchContactMessages();
