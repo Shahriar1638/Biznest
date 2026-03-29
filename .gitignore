@@ -1,22 +1,70 @@
 # Dependencies
 node_modules/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
 
-# Ignore the ideas folder
-Ideas/
+# Build & Dist
+dist/
+dist-ssr/
+build/
+out/
+.next/
+.serverless/
+.output/
 
-# Ignore environment file in BizNest-server
-BizNest-server/.env
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
 
-# Ignore environment variable files
+# Environment & Secrets
 .env
-.env.local
-.env.development
-.env.test
-.env.production
-.env.staging
+.env.*
+!.env.example
+*.local
 
-# OS & Editor files
+# Debugging & Test
+.node_repl_history
+test_results.txt
+test_results_ascii.txt
+coverage/
+.nyc_output/
+
+# Editor & OS
+.vscode/
+!.vscode/extensions.json
+.idea/
 .DS_Store
 Thumbs.db
-.vscode/
-.idea/
+*.swp
+*.swo
+
+# Project Specific
+Ideas/
+IMG Collection/
+
+# Agent/Assistant
+.agents/
+skills-lock.json
+brain/
+knowledge/
+checkpoint/
+context/
+logs/
+plan/
+summary/
+task/
+walkthrough/
+implementation_plan/
+research/
+scratch/
+status/
+test/
+tmp/
+*.temp
+*.bak

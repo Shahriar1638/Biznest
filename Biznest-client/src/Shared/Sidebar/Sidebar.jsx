@@ -18,6 +18,12 @@ const Sidebar = ({ isOpen, onClose }) => {
             children: []
         },
         {
+            title: 'Refund Requests',
+            icon: 'fas fa-hand-holding-usd',
+            path: '/dashboard/admin/refunds',
+            children: []
+        },
+        {
             title: 'Contact Messages',
             icon: 'fas fa-envelope',
             path: '/dashboard/admin/feedback',

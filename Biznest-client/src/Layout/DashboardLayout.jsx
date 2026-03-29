@@ -1,6 +1,7 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { Outlet } from "react-router-dom";
 import Sidebar from "../Shared/Sidebar/Sidebar";
+import ChatWidget from "../components/ChatWidget/ChatWidget";
 
 const DashboardLayout = () => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -22,8 +23,9 @@ const DashboardLayout = () => {
 
             <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
             <div className="flex-1 lg:ml-0 overflow-hidden">
-                <main className="h-full overflow-y-auto">
+                <main className="h-full overflow-y-auto relative">
                     <Outlet />
+                    <ChatWidget />
                 </main>
             </div>
         </div>

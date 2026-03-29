@@ -25,7 +25,20 @@ const paymentSchema = new mongoose.Schema({
   
   transaction_id: { type: String },
   stripe_payment_intent_id: { type: String },
-  stripe_payment_method_id: { type: String }
+  stripe_payment_method_id: { type: String },
+  
+  // --- NestBot Refund Lifecycle Fields ---
+  refund_status: {
+    type: String,
+    enum: ['none', 'refund_requested', 'refund_approved', 'refund_rejected', 'refunded'],
+    default: 'none'
+  },
+  refund_requested_at: { type: Date },
+  refund_reason:       { type: String },
+  refund_approved_at:  { type: Date },
+  refund_approved_by:  { type: String },
+  refund_rejected_at:  { type: Date },
+  refund_rejected_by:  { type: String }
 }, { 
   timestamps: true 
 });

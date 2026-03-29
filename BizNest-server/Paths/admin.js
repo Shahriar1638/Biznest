@@ -3,7 +3,9 @@ const router = express.Router();
 const verifyToken = require('../middlewares/verifyToken');
 const verifyAdmin = require('../middlewares/verifyAdmin');
 
-module.exports = (productCollection, userCollection, contactCollection) => {
+module.exports = (productCollection, userCollection, contactCollection, paymentCollection) => {
+    const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+
 
     // Update product status - Admin only
     router.put('/products/status', verifyToken, verifyAdmin(userCollection), async (req, res) => {
@@ -319,6 +321,81 @@ module.exports = (productCollection, userCollection, contactCollection) => {
                 message: 'Failed to toggle message read status',
                 error: error.message
             });
+        }
+    });
+
+    // --- NestBot Refund Management ---
+
+    // Get all refund requests
+    router.get('/refunds', verifyToken, verifyAdmin(userCollection), async (req, res) => {
+        try {
+            const refunds = await paymentCollection
+                .find({ refund_status: 'refund_requested' })
+                .sort({ refund_requested_at: -1 })
+                .toArray();
+
+            res.status(200).json({
+                success: true,
+                data: refunds
+            });
+        } catch (error) {
+            res.status(500).json({ success: false, message: error.message });
+        }
+    });
+
+    // Approve Refund (Stripe + DB)
+    router.put('/refunds/:orderID/approve', verifyToken, verifyAdmin(userCollection), async (req, res) => {
+        try {
+            const { orderID } = req.params;
+            const adminEmail = req.decoded.email;
+
+            const payment = await paymentCollection.findOne({ orderID });
+            if (!payment) return res.status(404).json({ success: false, message: "Order not found" });
+
+            // 1. Trigger Stripe Refund
+            const refund = await stripe.refunds.create({
+                payment_intent: payment.stripe_payment_intent_id,
+            });
+
+            // 2. Update DB
+            await paymentCollection.updateOne(
+                { orderID },
+                { $set: { 
+                    refund_status: 'refunded',
+                    refund_approved_at: new Date(),
+                    refund_approved_by: adminEmail,
+                    stripe_refund_id: refund.id,
+                    payment_status: 'refunded'
+                }}
+            );
+
+            res.status(200).json({ success: true, message: "Refund processed successfully via Stripe." });
+        } catch (error) {
+            console.error('Refund Approval Error:', error);
+            res.status(500).json({ success: false, message: error.message });
+        }
+    });
+
+    // Reject Refund
+    router.put('/refunds/:orderID/reject', verifyToken, verifyAdmin(userCollection), async (req, res) => {
+        try {
+            const { orderID } = req.params;
+            const { reason } = req.body;
+            const adminEmail = req.decoded.email;
+
+            await paymentCollection.updateOne(
+                { orderID },
+                { $set: { 
+                    refund_status: 'refund_rejected',
+                    refund_rejected_at: new Date(),
+                    refund_rejected_by: adminEmail,
+                    refund_rejection_reason: reason
+                }}
+            );
+
+            res.status(200).json({ success: true, message: "Refund request rejected." });
+        } catch (error) {
+            res.status(500).json({ success: false, message: error.message });
         }
     });
 

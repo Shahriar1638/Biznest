@@ -1,7 +1,8 @@
 const express = require('express');
-const router = express.Router();
 
 module.exports = (productCollection) => {
+    const router = express.Router();
+
 
 // ----------------------------------------------> Featured Products (Top 8 Best Sellers) <------------------------------
   router.get('/featured', async (req, res) => {

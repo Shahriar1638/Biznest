@@ -19,6 +19,7 @@ import AddProducts from "../Pages/Dashboards/SellerDashboard/AddProducts/Addprod
 import ALLProductsAdmin from "../Pages/Dashboards/AdminDashboard/All Prodcuts Admin/ALLProductsAdmin";
 import RegisterAdmin from "../Pages/Dashboards/AdminDashboard/RegisterAdmin/RegisterAdmin";
 import Feedback from "../Pages/Dashboards/AdminDashboard/FeedBacks/Feedback";
+import RefundRequests from "../Pages/Dashboards/AdminDashboard/RefundRequests/RefundRequests";
 import DashboardDefault from "../Pages/Dashboards/DashboardDefault";
 import PrivateRoute from "./PrivateRoute";
 import AdminRoute from "./AdminRoute";
@@ -150,6 +151,14 @@ const Routes = createBrowserRouter([
         element: (
           <AdminRoute>
             <Feedback />
+          </AdminRoute>
+        ),
+      },
+      {
+        path: "/dashboard/admin/refunds",
+        element: (
+          <AdminRoute>
+            <RefundRequests />
           </AdminRoute>
         ),
       },

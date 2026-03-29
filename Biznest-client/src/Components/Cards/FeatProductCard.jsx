@@ -326,8 +326,8 @@ const FeatProductCard = ({ product, showWishlist = true, showAddToCart = true })
                             >
                                 <option value="">Select quantity</option>
                                 {product.quantity_description && product.quantity_description.length > 0 ? (
-                                    product.quantity_description.map((qty) => (
-                                        <option key={qty.unitid} value={qty.unitid}>
+                                    product.quantity_description.map((qty, idx) => (
+                                        <option key={qty.unitid || idx} value={qty.unitid}>
                                             {qty.unit_value} {qty.unit_type?.split('-')[0] || qty.unit_type} - ৳{qty.unit_price}
                                             {qty.unit_quantity > 0 ? ` (${qty.unit_quantity} available)` : ' (Out of stock)'}
                                         </option>

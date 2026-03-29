@@ -8,7 +8,11 @@ const { MongoClient, ServerApiVersion } = require('mongodb');
 const port = process.env.PORT || 3000;
 
 // middleware
-app.use(cors());
+app.use(cors({
+  origin: ["http://localhost:5173", "http://localhost:5174"],
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
+}));
 app.use(express.json());
 
 // Security Middleware
@@ -20,9 +24,9 @@ app.use(helmet({
 const rateLimit = require('express-rate-limit');
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per `window` (here, per 15 minutes)
-  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
-  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  max: 5000, // Developer limit. 5000 per 15 minutes to avoid blocking tests.
+  standardHeaders: true, 
+  legacyHeaders: false,
   message: 'Too many requests from this IP, please try again later.'
 });
 
@@ -49,13 +53,17 @@ async function run() {
     const cartCollection = client.db("BiznestDB").collection("cart_collection");
     const paymentCollection = client.db("BiznestDB").collection("payments_details");
     const contactCollection = client.db("BiznestDB").collection("contact_messages");
+    const knowledgeCollection = client.db("BiznestDB").collection("knowledge_base");
+
 
     const Authentications = require('./Paths/Auth')(userCollection);
     const productAPI = require('./Paths/Products')(productCollection);
     const userAPI = require('./Paths/user')(cartCollection, paymentCollection, productCollection, userCollection);
     const sellerAPI = require('./Paths/seller')(productCollection, userCollection);
     const publicAPI = require('./Paths/public')(contactCollection);
-    const adminAPI = require('./Paths/admin')(productCollection, userCollection, contactCollection);
+    const adminAPI = require('./Paths/admin')(productCollection, userCollection, contactCollection, paymentCollection);
+    const aiAPI = require('./Paths/AI')(paymentCollection, productCollection, contactCollection, knowledgeCollection);
+
 
     app.use('/products', productAPI);
     app.use('/auth', Authentications);
@@ -63,6 +71,8 @@ async function run() {
     app.use('/seller', sellerAPI);
     app.use('/public', publicAPI);
     app.use('/admin', adminAPI);
+    app.use('/ai', aiAPI);
+
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
