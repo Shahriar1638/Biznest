@@ -39,30 +39,30 @@ const client = new MongoClient(uri, {
   }
 });
 
+const userCollection = client.db("BiznestDB").collection("userinfos");
+const productCollection = client.db("BiznestDB").collection("products_collection");
+const cartCollection = client.db("BiznestDB").collection("cart_collection");
+const paymentCollection = client.db("BiznestDB").collection("payments_details");
+const contactCollection = client.db("BiznestDB").collection("contact_messages");
+
+const Authentications = require('./Paths/Auth')(userCollection);
+const productAPI = require('./Paths/Products')(productCollection);
+const userAPI = require('./Paths/user')(cartCollection, paymentCollection, productCollection, userCollection);
+const sellerAPI = require('./Paths/seller')(productCollection, userCollection);
+const publicAPI = require('./Paths/public')(contactCollection);
+const adminAPI = require('./Paths/admin')(productCollection, userCollection, contactCollection);
+
+app.use('/products', productAPI);
+app.use('/auth', Authentications);
+app.use('/user', userAPI);
+app.use('/seller', sellerAPI);
+app.use('/public', publicAPI);
+app.use('/admin', adminAPI);
+
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
-
-    const userCollection = client.db("BiznestDB").collection("userinfos");
-    const productCollection = client.db("BiznestDB").collection("products_collection");
-    const cartCollection = client.db("BiznestDB").collection("cart_collection");
-    const paymentCollection = client.db("BiznestDB").collection("payments_details");
-    const contactCollection = client.db("BiznestDB").collection("contact_messages");
-
-    const Authentications = require('./Paths/Auth')(userCollection);
-    const productAPI = require('./Paths/Products')(productCollection);
-    const userAPI = require('./Paths/user')(cartCollection, paymentCollection, productCollection, userCollection);
-    const sellerAPI = require('./Paths/seller')(productCollection, userCollection);
-    const publicAPI = require('./Paths/public')(contactCollection);
-    const adminAPI = require('./Paths/admin')(productCollection, userCollection, contactCollection);
-
-    app.use('/products', productAPI);
-    app.use('/auth', Authentications);
-    app.use('/user', userAPI);
-    app.use('/seller', sellerAPI);
-    app.use('/public', publicAPI);
-    app.use('/admin', adminAPI);
+    // await client.connect();
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
@@ -82,3 +82,5 @@ app.get('/', (req, res) => {
 app.listen(port, () => {
   console.log(`Current active port: ${port}`);
 })
+
+module.exports = app;
