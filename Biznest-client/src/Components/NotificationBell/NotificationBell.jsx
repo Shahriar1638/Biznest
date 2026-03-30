@@ -1,18 +1,29 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import useAuth from "../../Hooks/useAuth";
-
-import useAxiosSecure from "../../Hooks/useAxiosSecure";
+import { useContacts, useAdminContacts } from "../../Hooks/useSecureQueries";
 
 const NotificationBell = () => {
   const { user } = useAuth();
-
-  const axiosSecure = useAxiosSecure();
   const [isOpen, setIsOpen] = useState(false);
-  const [notifications, setNotifications] = useState([]);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [loading, setLoading] = useState(false);
   const dropdownRef = useRef(null);
+
+  const { data: userContacts = [], isLoading: userLoading } = useContacts();
+  const { data: adminContacts = [], isLoading: adminLoading } =
+    useAdminContacts();
+
+  const isAdmin = user?.role?.type === "admin";
+  const loading = isAdmin ? adminLoading : userLoading;
+
+  let notifications = [];
+  if (isAdmin) {
+    notifications = adminContacts.filter((msg) => !msg.msgAdminStatus);
+  } else {
+    notifications = userContacts.filter(
+      (msg) => msg.reply && !msg.msgClientStatus,
+    );
+  }
+  const unreadCount = notifications.length;
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -27,52 +38,8 @@ const NotificationBell = () => {
     };
   }, []);
 
-  const fetchNotifications = async () => {
-    if (!user?.email) return;
-
-    setLoading(true);
-    try {
-      let response;
-
-      if (user.role?.type === "admin") {
-        response = await axiosSecure.get("/admin/contacts");
-        const allMessages = response.data.data || [];
-        const unreadMessages = allMessages.filter((msg) => !msg.msgAdminStatus);
-        setNotifications(unreadMessages);
-        setUnreadCount(unreadMessages.length);
-      } else {
-        response = await axiosSecure.get("/public/my-contacts");
-        const userMessages = response.data.data || [];
-
-        const unreadReplies = userMessages.filter(
-          (msg) => msg.reply && !msg.msgClientStatus,
-        );
-
-        setNotifications(unreadReplies);
-        setUnreadCount(unreadReplies.length);
-      }
-    } catch (error) {
-      console.error("Error fetching notifications:", error);
-      setNotifications([]);
-      setUnreadCount(0);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (user?.email) {
-      fetchNotifications();
-      const interval = setInterval(fetchNotifications, 30000);
-      return () => clearInterval(interval);
-    }
-  }, [user?.email]); // eslint-disable-line react-hooks/exhaustive-deps
-
   const toggleDropdown = () => {
     setIsOpen(!isOpen);
-    if (!isOpen) {
-      fetchNotifications();
-    }
   };
 
   const formatDate = (dateString) => {

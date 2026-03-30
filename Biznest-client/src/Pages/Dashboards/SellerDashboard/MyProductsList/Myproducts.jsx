@@ -1,8 +1,6 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import useAuth from "../../../../Hooks/useAuth";
-import useAxiosSecure from "../../../../Hooks/useAxiosSecure";
+import { useSellerProducts } from "../../../../Hooks/useSecureQueries";
 import {
   PrimaryButton,
   SecondaryButton,
@@ -10,8 +8,6 @@ import {
 } from "../../../../Components/Buttons";
 
 const MyProducts = () => {
-  const { user } = useAuth();
-  const axiosSecure = useAxiosSecure();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
 
@@ -20,17 +16,7 @@ const MyProducts = () => {
     isLoading,
     error,
     refetch,
-  } = useQuery({
-    queryKey: ["sellerProducts", user?.email],
-    queryFn: async () => {
-      if (!user?.email) return { products: [] };
-      const response = await axiosSecure.get("/seller/my-products");
-      return response.data;
-    },
-    enabled: !!user?.email,
-    staleTime: 5 * 60 * 1000,
-    cacheTime: 10 * 60 * 1000,
-  });
+  } = useSellerProducts();
 
   const products = productsData?.products || [];
 

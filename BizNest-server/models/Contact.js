@@ -20,9 +20,9 @@ const contactSchema = new mongoose.Schema({
   assignedTo: { type: String },
   resolvedBy: { type: String },
   
-  msgAdminStatus: { type: Boolean, default: false }, // if admin read it
+  msgAdminStatus: { type: Boolean, default: false },
   adminReadAt: { type: Date },
-  msgClientStatus: { type: Boolean, default: false }, // if client read reply
+  msgClientStatus: { type: Boolean, default: false },
   clientReadAt: { type: Date }
 });
 

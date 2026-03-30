@@ -1,7 +1,6 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useAdminContacts } from "../../../../Hooks/useSecureQueries";
 import useAxiosSecure from "../../../../Hooks/useAxiosSecure";
-import useAuth from "../../../../Hooks/useAuth";
 import Swal from "sweetalert2";
 import {
   PrimaryButton,
@@ -11,7 +10,6 @@ import {
 
 const Feedback = () => {
   const axiosSecure = useAxiosSecure();
-  const { user } = useAuth();
   const [selectedFilter, setSelectedFilter] = useState("all");
   const [replyModalOpen, setReplyModalOpen] = useState(false);
   const [selectedContact, setSelectedContact] = useState(null);
@@ -19,37 +17,15 @@ const Feedback = () => {
   const [sendingReply, setSendingReply] = useState(false);
 
   const {
-    data: contactsData = null,
+    data: contacts = [],
     isLoading,
     error,
     refetch,
-  } = useQuery({
-    queryKey: ["adminContacts", selectedFilter],
-    queryFn: async () => {
-      if (!user?.email) return { contacts: [] };
+  } = useAdminContacts(selectedFilter);
 
-      // Backend now handles admin verification and email retrieval from token
-      // We just need to pass the status filter if it's not 'all'
-      const params = new URLSearchParams();
-      if (selectedFilter !== "all") {
-        params.append("status", selectedFilter);
-      }
-
-      console.log("Fetching contacts with params:", params.toString());
-      const response = await axiosSecure.get(
-        `/admin/contacts?${params.toString()}`,
-      );
-      return response.data;
-    },
-    enabled: !!user?.email,
-    staleTime: 5 * 60 * 1000,
-    refetchOnWindowFocus: true,
-  });
-
-  const contacts =
-    contactsData?.contacts?.sort(
-      (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
-    ) || [];
+  const sortedContacts = [...contacts].sort(
+    (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
+  );
 
   const handleReply = async (e) => {
     e.preventDefault();
@@ -167,7 +143,7 @@ const Feedback = () => {
   const handleMarkAllAsRead = async () => {
     // This could be optimized with a dedicated backend endpoint
     // For now, we'll iterate through unread messages (limit to visible ones or first batch)
-    const unreadContacts = contacts.filter((c) => !c.msgAdminStatus);
+    const unreadContacts = sortedContacts.filter((c) => !c.msgAdminStatus);
 
     if (unreadContacts.length === 0) {
       Swal.fire({
@@ -264,7 +240,7 @@ const Feedback = () => {
               Mark All as Read
             </SecondaryButton>
             <div className="bg-amber-100 text-amber-800 px-4 py-2 rounded-lg font-medium">
-              {contacts.filter((c) => !c.msgAdminStatus).length} Unread
+              {sortedContacts.filter((c) => !c.msgAdminStatus).length} Unread
             </div>
           </div>
         </div>
@@ -313,7 +289,7 @@ const Feedback = () => {
 
         {/* Messages List */}
         <div className="space-y-4">
-          {contacts.length === 0 ? (
+          {sortedContacts.length === 0 ? (
             <div className="text-center py-16 bg-white rounded-lg shadow-sm">
               <svg
                 className="w-16 h-16 text-gray-300 mx-auto mb-4"
@@ -338,7 +314,7 @@ const Feedback = () => {
               </p>
             </div>
           ) : (
-            contacts.map((contact) => (
+            sortedContacts.map((contact) => (
               <div
                 key={contact._id}
                 className={`card-biznest p-6 transition-shadow hover:shadow-md ${

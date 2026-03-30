@@ -3,6 +3,7 @@ node_modules/
 
 # Ignore the ideas folder
 Ideas/
+Biznest-client/lazy_loading_report.md
 
 # Ignore environment file in BizNest-server
 BizNest-server/.env

@@ -1,52 +1,16 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
 import Swal from "sweetalert2";
 import useAuth from "../../Hooks/useAuth";
 import useAxiosSecure from "../../Hooks/useAxiosSecure";
+import { useContacts } from "../../Hooks/useSecureQueries";
 import { PrimaryButton, SecondaryButton } from "../../Components/Buttons";
 import { MessageDetailsModal } from "../../Components/Modals";
 
 const ReplyContactMsg = () => {
-  const { user, loading: authLoading } = useAuth();
-  const [contactMessages, setContactMessages] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { user } = useAuth();
+  const { data: contactMessages = [], isLoading, refetch } = useContacts();
   const [toggleLoadingStates, setToggleLoadingStates] = useState({});
   const axiosSecure = useAxiosSecure();
-
-  const fetchContactMessages = useCallback(async () => {
-    // Wait for authentication to resolve first
-    if (authLoading) return;
-
-    // If auth finishes and there's no user, clear the loading state and exit
-    if (!user?.email) {
-      setIsLoading(false);
-      return;
-    }
-
-    try {
-      setIsLoading(true);
-      const response = await axiosSecure.get("/public/my-contacts");
-
-      if (response.data.success) {
-        setContactMessages(response.data.data);
-      } else {
-        throw new Error(response.data.message || "Failed to fetch messages");
-      }
-    } catch (error) {
-      console.error("Error fetching contact messages:", error);
-      Swal.fire({
-        icon: "error",
-        title: "Error Loading Messages",
-        text: "Failed to load your contact messages. Please try again.",
-        confirmButtonColor: "#ef4444",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [user?.email, axiosSecure, authLoading]);
-
-  useEffect(() => {
-    fetchContactMessages();
-  }, [fetchContactMessages]);
 
   // Handle toggle read/unread status
   const handleToggleReadStatus = async (messageId) => {
@@ -60,14 +24,8 @@ const ReplyContactMsg = () => {
       );
 
       if (response.data.success) {
-        // Update the local state
-        setContactMessages((prev) =>
-          prev.map((msg) =>
-            msg._id === messageId
-              ? { ...msg, msgClientStatus: response.data.isRead }
-              : msg,
-          ),
-        );
+        // Refetch via React Query
+        refetch();
 
         Swal.fire({
           icon: "success",
@@ -127,10 +85,8 @@ const ReplyContactMsg = () => {
 
       await Promise.all(promises);
 
-      // Update local state
-      setContactMessages((prev) =>
-        prev.map((msg) => ({ ...msg, msgClientStatus: true })),
-      );
+      // Refetch via React Query
+      refetch();
 
       Swal.fire({
         icon: "success",
@@ -248,7 +204,7 @@ const ReplyContactMsg = () => {
                     ✅ Mark All as Read
                   </PrimaryButton>
                 )}
-                <SecondaryButton onClick={fetchContactMessages} size="small">
+                <SecondaryButton onClick={() => refetch()} size="small">
                   🔄 Refresh Messages
                 </SecondaryButton>
               </div>

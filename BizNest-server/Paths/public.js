@@ -72,7 +72,7 @@ module.exports = (contactCollection) => {
     // GET endpoint to retrieve contact messages for logged in user
     router.get('/my-contacts', verifyToken, async (req, res) => {
         try {
-            const email = req.decoded.email; // From token
+            const email = req.decoded.email;
             
             // Get contact messages for the specific email
             const messages = await contactCollection

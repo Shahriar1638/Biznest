@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useAdminProducts } from "../../../../Hooks/useSecureQueries";
 import useAxiosSecure from "../../../../Hooks/useAxiosSecure";
 import useAuth from "../../../../Hooks/useAuth";
 import Swal from "sweetalert2";
@@ -16,23 +16,7 @@ const ALLProductsAdmin = () => {
     isLoading,
     error,
     refetch,
-  } = useQuery({
-    queryKey: ["adminProducts", selectedFilter],
-    queryFn: async () => {
-      let response;
-      if (selectedFilter === "all") {
-        response = await axiosSecure.get("/admin/products");
-        return { products: response.data, count: response.data.length }; // Adjust structure if needed based on backend response
-      } else {
-        response = await axiosSecure.get(
-          `/admin/products?status=${selectedFilter}`,
-        );
-        return { products: response.data, count: response.data.length };
-      }
-    },
-    staleTime: 5 * 60 * 1000,
-    cacheTime: 10 * 60 * 1000,
-  });
+  } = useAdminProducts(selectedFilter);
 
   const products = productsData?.products || [];
   const filteredProducts = products.filter((product) => {

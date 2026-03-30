@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import useAuth from "../../../Hooks/useAuth";
 import useAxiosSecure from "../../../Hooks/useAxiosSecure";
-import { useQuery } from "@tanstack/react-query";
+import { useCart } from "../../../Hooks/useSecureQueries";
 import { useProducts } from "../../../Hooks/useProducts";
 import {
   PrimaryButton,
@@ -17,31 +17,7 @@ const ShowCart = () => {
   const navigate = useNavigate();
   const [isUpdating, setIsUpdating] = useState(false);
 
-  const {
-    data: cartData,
-    isLoading,
-    error,
-    refetch,
-  } = useQuery({
-    queryKey: ["userCart", user?.email],
-    queryFn: async () => {
-      if (!user?.email) return null;
-      try {
-        const response = await axiosSecure.get(`/user/cart`);
-        return response.data.userCart;
-      } catch (error) {
-        if (error.response?.status === 404) {
-          return null;
-        }
-        throw error;
-      }
-    },
-    enabled: !!user?.email,
-    staleTime: 1,
-    cacheTime: 5 * 60 * 1000,
-    refetchOnWindowFocus: true,
-    refetchOnMount: true,
-  });
+  const { data: cartData, isLoading, error, refetch } = useCart();
   const { data: allProducts, isLoading: isProductsLoading } =
     useProducts("all");
 
