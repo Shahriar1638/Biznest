@@ -2,6 +2,8 @@ const express = require('express');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const router = express.Router();
 const verifyToken = require('../middlewares/verifyToken');
+const Cart = require('../models/Cart');
+const Payment = require('../models/Payment');
 
 module.exports = (cartCollection, paymentCollection, productCollection, userCollection) => {
 
@@ -79,8 +81,8 @@ module.exports = (cartCollection, paymentCollection, productCollection, userColl
           });
         }
       } else {
-        // No cart exists for this customer, create new cart
-        const newCart = {
+        // No cart exists for this customer, create new cart via Mongoose
+        const newCart = new Cart({
           customeremail,
           cart_details: [
             {
@@ -91,9 +93,18 @@ module.exports = (cartCollection, paymentCollection, productCollection, userColl
               added_date: formattedDate
             }
           ]
-        };
+        });
         
-        const result = await cartCollection.insertOne(newCart);
+        // Let Mongoose handle validations
+        const validationError = newCart.validateSync();
+        if (validationError) {
+           return res.status(400).json({
+             success: false,
+             message: Object.values(validationError.errors).map(val => val.message).join(', ')
+           });
+        }
+
+        const result = await newCart.save();
         
         res.status(201).json({
           success: true,
@@ -507,21 +518,26 @@ module.exports = (cartCollection, paymentCollection, productCollection, userColl
       const formattedDate = `${day}-${month}-${year}`;
       const timestamp = currentDate.toISOString();
       
-      // Create payment record with all the data including Stripe information
-      const paymentRecord = {
+      // Create payment record using Mongoose Model
+      const paymentRecord = new Payment({
         ...paymentData,
         payment_date: formattedDate,
         payment_timestamp: timestamp,
-        payment_status: paymentIntent.status, // 'succeeded', 'requires_action', etc.
-        transaction_id: paymentIntent.id, // Main transaction ID for easy reference
+        payment_status: paymentIntent.status, 
+        transaction_id: paymentIntent.id, 
         stripe_payment_intent_id: paymentIntent.id,
         stripe_payment_method_id: paymentMethodId,
         calculated_total: calculatedTotal,
         final_amount: payment_amount
-      };
+      });
       
-      // Insert payment record into database
-      const result = await paymentCollection.insertOne(paymentRecord);
+      const validationError = paymentRecord.validateSync();
+      if (validationError) {
+          throw new Error('Validation failed: ' + Object.values(validationError.errors).map(val => val.message).join(', '));
+      }
+
+      // Insert payment record into database via Mongoose
+      const result = await paymentRecord.save();
       
       // Handle different payment statuses
       if (paymentIntent.status === 'succeeded') {
@@ -558,7 +574,7 @@ module.exports = (cartCollection, paymentCollection, productCollection, userColl
         res.status(201).json({
           success: true,
           message: 'Payment processed successfully',
-          paymentId: result.insertedId,
+          paymentId: result._id,
           transactionId: paymentIntent.id, // Return transaction ID to frontend
           stripePaymentIntentId: paymentIntent.id,
           paymentStatus: paymentIntent.status,

@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const verifyToken = require('../middlewares/verifyToken');
 const verifyAdmin = require('../middlewares/verifyAdmin');
+const Product = require('../models/Product');
 
 module.exports = (productCollection, userCollection, contactCollection) => {
 
@@ -11,34 +12,8 @@ module.exports = (productCollection, userCollection, contactCollection) => {
             const { productId, status } = req.body;
             const adminEmail = req.decoded.email; // Get email from token
 
-            // Validate required fields
-            if (!productId || !status) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Product ID and status are required'
-                });
-            }
-
-            // Validate status values
-            const validStatuses = ['pending', 'released', 'rejected'];
-            if (!validStatuses.includes(status)) {
-                return res.status(400).json({
-                    success: false,
-                    message: `Invalid status. Must be one of: ${validStatuses.join(', ')}`
-                });
-            }
-
-            // Check if product exists
-            const existingProduct = await productCollection.findOne({ productId });
-            if (!existingProduct) {
-                return res.status(404).json({
-                    success: false,
-                    message: 'Product not found'
-                });
-            }
-
-            // Update product status
-            const updateResult = await productCollection.updateOne(
+            // Update product status via Mongoose directly (runValidators triggers the enum check)
+            const updatedProduct = await Product.findOneAndUpdate(
                 { productId },
                 { 
                     $set: { 
@@ -46,18 +21,16 @@ module.exports = (productCollection, userCollection, contactCollection) => {
                         statusUpdatedAt: new Date(),
                         statusUpdatedBy: adminEmail
                     }
-                }
+                },
+                { new: false, runValidators: true } // new: false returns the old object so we can get previous status
             );
 
-            if (updateResult.modifiedCount === 0) {
-                return res.status(500).json({
+            if (!updatedProduct) {
+                return res.status(404).json({
                     success: false,
-                    message: 'Failed to update product status'
+                    message: 'Product not found'
                 });
             }
-
-            // Get updated product for response
-            const updatedProduct = await productCollection.findOne({ productId });
 
             res.status(200).json({
                 success: true,
@@ -65,18 +38,18 @@ module.exports = (productCollection, userCollection, contactCollection) => {
                 data: {
                     productId: updatedProduct.productId,
                     productName: updatedProduct.product_name,
-                    previousStatus: existingProduct.product_status,
-                    newStatus: updatedProduct.product_status,
-                    updatedAt: updatedProduct.statusUpdatedAt,
-                    updatedBy: updatedProduct.statusUpdatedBy
+                    previousStatus: updatedProduct.product_status, // Since new: false, this is old
+                    newStatus: status,
+                    updatedAt: new Date(),
+                    updatedBy: adminEmail
                 }
             });
 
         } catch (error) {
             console.error('Error updating product status:', error);
-            res.status(500).json({
+            res.status(400).json({
                 success: false,
-                message: 'Internal server error while updating product status',
+                message: error.name === 'ValidationError' ? error.message : 'Internal server error while updating product status',
                 error: error.message
             });
         }

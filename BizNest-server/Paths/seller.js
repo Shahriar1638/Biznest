@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const verifyToken = require('../middlewares/verifyToken');
 const verifySeller = require('../middlewares/verifySeller');
+const Product = require('../models/Product');
 
 module.exports = (productCollection, userCollection) => {
 
@@ -46,21 +47,13 @@ module.exports = (productCollection, userCollection) => {
       const sellerEmail = req.decoded.email; // Get secure email
       console.log('Product details received:', productdetails);
 
-      const Joi = require('joi');
-      const productSchema = Joi.object({
-        product_name: Joi.string().required(),
-        product_description: Joi.string().required(),
-        product_price: Joi.number().positive().required(),
-        product_quantity: Joi.number().integer().min(0).required(),
-        category: Joi.string().required(),
-        // Add other fields as necessary based on your data model
-      }).unknown(true); // Allow other fields for now to prevent breaking changes
-
-      const { error } = productSchema.validate(productdetails);
-      if (error) {
+      const tempProduct = new Product(productdetails);
+      const validationError = tempProduct.validateSync();
+      
+      if (validationError) {
         return res.status(400).json({
           success: false,
-          message: error.details[0].message
+          message: Object.values(validationError.errors).map(val => val.message).join(', ')
         });
       }
 
@@ -72,23 +65,24 @@ module.exports = (productCollection, userCollection) => {
       const formattedDate = `${day}-${month}-${year}`;
 
       // Add additional fields to product
-      const productToInsert = {
+      const productToInsert = new Product({
         ...productdetails,
         selleremail: sellerEmail, // Force secure email
         created_date: formattedDate,
         status: 'pending', // Default status for new products
-        approved: false
-      };
+        approved: false,
+        product_status: 'pending' // Based on model schema
+      });
 
       // Insert product into database
-      const result = await productCollection.insertOne(productToInsert);
+      const result = await productToInsert.save();
 
       // Return success response
       res.status(201).json({
         success: true,
         message: 'Product added successfully',
         result,
-        productId: result.insertedId
+        productId: result._id
       });
 
     } catch (error) {

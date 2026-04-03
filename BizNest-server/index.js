@@ -4,6 +4,7 @@ const cors = require('cors');
 const jwt = require('jsonwebtoken');
 require('dotenv').config()
 const { MongoClient, ServerApiVersion } = require('mongodb');
+const mongoose = require('mongoose');
 // const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const port = process.env.PORT || 3000;
 
@@ -44,6 +45,10 @@ const productCollection = client.db("BiznestDB").collection("products_collection
 const cartCollection = client.db("BiznestDB").collection("cart_collection");
 const paymentCollection = client.db("BiznestDB").collection("payments_details");
 const contactCollection = client.db("BiznestDB").collection("contact_messages");
+
+mongoose.connect(uri, { dbName: 'BiznestDB' })
+  .then(() => console.log('Mongoose is successfully connected alongside MongoClient!'))
+  .catch(err => console.error('Mongoose connection error:', err));
 
 const Authentications = require('./Paths/Auth')(userCollection);
 const productAPI = require('./Paths/Products')(productCollection);

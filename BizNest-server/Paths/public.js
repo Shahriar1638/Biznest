@@ -1,6 +1,7 @@
 const express = require('express');
 const { ObjectId } = require('mongodb');
 const verifyToken = require('../middlewares/verifyToken');
+const Contact = require('../models/Contact');
 
 module.exports = (contactCollection) => {
     const router = express.Router();
@@ -10,54 +11,38 @@ module.exports = (contactCollection) => {
         try {
             const { name, email, userType, issueCategory, subject, message } = req.body;
             
-            // Validate required fields
-            if (!name || !email || !issueCategory || !subject || !message) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Please fill in all required fields'
-                });
-            }
-
-            // Validate email format
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(email)) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Please provide a valid email address'
-                });
-            }
-
-            // Create contact message object
-            const contactMessage = {
-                name: name.trim(),
-                email: email.toLowerCase().trim(),
-                userEmail: email.toLowerCase().trim(), // Add userEmail for compatibility
+            // Create contact message object for Mongoose
+            const contactMessage = new Contact({
+                name: name ? name.trim() : undefined,
+                email: email ? email.toLowerCase().trim() : undefined,
+                userEmail: email ? email.toLowerCase().trim() : undefined,
                 userType: userType || 'general',
                 issueCategory,
-                subject: subject.trim(),
-                message: message.trim(),
-                status: 'pending', // pending, in-progress, resolved
+                subject: subject ? subject.trim() : undefined,
+                message: message ? message.trim() : undefined,
+                status: 'pending',
                 priority: issueCategory === 'order-issue' || issueCategory === 'payment-problem' ? 'high' : 'normal',
-                createdAt: new Date(),
-                resolvedAt: null,
-                reply: null,
-                assignedTo: null,
-                msgAdminStatus: false, // Admin has read the message
-                msgClientStatus: false // Client has read the reply
-            };
+                msgAdminStatus: false,
+                msgClientStatus: false
+            });
+
+            // Trigger Mongoose Validation
+            const validationError = contactMessage.validateSync();
+            if (validationError) {
+                return res.status(400).json({
+                    success: false,
+                    message: Object.values(validationError.errors).map(val => val.message).join(', ')
+                });
+            }
 
             // Insert contact message into database
-            const result = await contactCollection.insertOne(contactMessage);
+            const result = await contactMessage.save();
 
-            if (result.insertedId) {
-                res.status(201).json({
-                    success: true,
-                    message: 'Your message has been sent successfully! We will get back to you within 24 hours.',
-                    messageId: result.insertedId
-                });
-            } else {
-                throw new Error('Failed to save contact message');
-            }
+            res.status(201).json({
+                success: true,
+                message: 'Your message has been sent successfully! We will get back to you within 24 hours.',
+                messageId: result._id
+            });
 
         } catch (error) {
             console.error('Error processing contact form:', error);

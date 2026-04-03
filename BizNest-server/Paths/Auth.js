@@ -2,6 +2,7 @@ const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { ObjectId } = require('mongodb');
+const User = require('../models/User');
 const router = express.Router();
 
 // Verify Token Middleware
@@ -26,32 +27,22 @@ module.exports = (userCollection) => {
     try {
       const userinfo = req.body;
 
-      const Joi = require('joi');
-      const signupSchema = Joi.object({
-        name: Joi.string().required(),
-        email: Joi.string().email().required(),
-        password: Joi.string().min(6).required(),
-        photoURL: Joi.string().uri().allow('', null),
-        role: Joi.object({
-          type: Joi.string().valid('customer', 'seller', 'admin').required(),
-          details: Joi.object().unknown(true)
-        }).required()
-      }).unknown(true);
-
-      const { error } = signupSchema.validate(userinfo);
-      if (error) {
-        return res.status(400).json({
-          success: false,
-          message: error.details[0].message
-        });
-      }
-
-      // console.log(userinfo);
       const email = userinfo.email;
       const password = userinfo.password;
 
-      // Check if user already exists
-      const existingUser = await userCollection.findOne({ email });
+      // Validate using Mongoose Model instead of Joi
+      const tempUser = new User(userinfo);
+      const validationError = tempUser.validateSync();
+      
+      if (validationError) {
+        return res.status(400).json({
+          success: false,
+          message: Object.values(validationError.errors).map(val => val.message).join(', ')
+        });
+      }
+
+      // Check if user already exists using Mongoose
+      const existingUser = await User.findOne({ email });
       if (existingUser) {
         return res.status(409).json({
           success: false,
@@ -65,7 +56,7 @@ module.exports = (userCollection) => {
 
       if (userType === 'customer') {
         // Get the count of existing customers and generate next customerID
-        const customerCount = await userCollection.countDocuments({ "role.type": "customer" });
+        const customerCount = await User.countDocuments({ "role.type": "customer" });
         const nextCustomerNumber = customerCount + 1;
         generatedID = `CUS${nextCustomerNumber.toString().padStart(3, '0')}`;
         userinfo.role.details.customerID = generatedID;
@@ -76,7 +67,7 @@ module.exports = (userCollection) => {
 
       } else if (userType === 'seller') {
         // Get the count of existing sellers and generate next sellerID
-        const sellerCount = await userCollection.countDocuments({ "role.type": "seller" });
+        const sellerCount = await User.countDocuments({ "role.type": "seller" });
         const nextSellerNumber = sellerCount + 1;
         generatedID = `SEL${nextSellerNumber.toString().padStart(3, '0')}`;
         userinfo.role.details.sellerID = generatedID;
@@ -88,7 +79,7 @@ module.exports = (userCollection) => {
 
       } else if (userType === 'admin') {
         // Get the count of existing admins and generate next adminID
-        const adminCount = await userCollection.countDocuments({ "role.type": "admin" });
+        const adminCount = await User.countDocuments({ "role.type": "admin" });
         const nextAdminNumber = adminCount + 1;
         generatedID = `ADM${nextAdminNumber.toString().padStart(3, '0')}`;
         userinfo.role.details.adminID = generatedID;
@@ -101,12 +92,12 @@ module.exports = (userCollection) => {
       const saltRounds = 10;
       const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-      // Create user object
-      const newUser = userinfo;
-      newUser.password = hashedPassword;
+      // Create user object using Mongoose
+      const finalUser = new User(userinfo);
+      finalUser.password = hashedPassword;
 
       // Insert user into database
-      const result = await userCollection.insertOne(newUser);
+      const result = await finalUser.save();
 
       // Return success response (excluding password)
       res.status(201).json({
@@ -127,27 +118,18 @@ module.exports = (userCollection) => {
   // ----------------------------------------------> Login start point <------------------------------
   router.post('/login', async (req, res) => {
     try {
-      const authinfo = req.body;
+      const { email, password } = authinfo;
 
-      const Joi = require('joi');
-      const loginSchema = Joi.object({
-        email: Joi.string().email().required(),
-        password: Joi.string().required()
-      });
-
-      const { error } = loginSchema.validate(authinfo);
-      if (error) {
+      // We only need simple presence check here for login
+      if (!email || !password) {
         return res.status(400).json({
           success: false,
-          message: error.details[0].message
+          message: 'Email and password are required'
         });
       }
 
-      // console.log(authinfo);
-      const { email, password } = authinfo;
-
       // Find user by email
-      const user = await userCollection.findOne({ email });
+      const user = await User.findOne({ email });
       if (!user) {
         return res.status(401).json({
           success: false,
@@ -198,7 +180,7 @@ module.exports = (userCollection) => {
       const password = userinfo.password;
 
       // Check if user already exists
-      const existingUser = await userCollection.findOne({ email });
+      const existingUser = await User.findOne({ email });
       if (existingUser) {
         return res.status(409).json({
           success: false,
@@ -207,7 +189,7 @@ module.exports = (userCollection) => {
       }
 
       // Generate admin ID
-      const adminCount = await userCollection.countDocuments({ "role.type": "admin" });
+      const adminCount = await User.countDocuments({ "role.type": "admin" });
       const nextAdminNumber = adminCount + 1;
       const generatedID = `ADM${nextAdminNumber.toString().padStart(3, '0')}`;
       userinfo.role.details.adminID = generatedID;
@@ -219,15 +201,17 @@ module.exports = (userCollection) => {
       const saltRounds = 10;
       const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-      // Create user object
-      const newAdmin = userinfo;
+      // Create admin object
+      const newAdmin = new User(userinfo);
       newAdmin.password = hashedPassword;
 
-      // Insert admin into database
-      const result = await userCollection.insertOne(newAdmin);
+      // Insert admin into database via Mongoose
+      const result = await newAdmin.save();
 
-      // Return success response (excluding password)
-      const { password: _, ...adminResponse } = newAdmin;
+      // Return success response (excluding password natively by destructuring from toObject())
+      const adminResponse = newAdmin.toObject();
+      delete adminResponse.password;
+      
       res.status(201).json({
         success: true,
         message: 'Admin registered successfully',
@@ -251,7 +235,7 @@ module.exports = (userCollection) => {
       const userId = req.decoded._id;
       // console.log('Decoded user ID from token:', userId);
       // Optionally, get fresh user data from database
-      const user = await userCollection.findOne({ _id: new ObjectId(userId) });
+      const user = await User.findOne({ _id: new ObjectId(userId) });
       // console.log(user);
       if (!user) {
         return res.status(404).json({
