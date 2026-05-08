@@ -1,11 +1,12 @@
-# RLS Policy Draft
-
 -- ============================================================
 -- HELPER FUNCTIONS (SECURITY DEFINER — placed in a private schema)
 -- These centralize repeated checks, improve performance, and
 -- keep policies DRY. Wrapped (SELECT auth.uid()) caches the
 -- call once per statement instead of once per row.
 -- ============================================================
+
+-- Create the private schema if it doesn't exist
+CREATE SCHEMA IF NOT EXISTS private;
 
 -- Check if the current user is an admin
 CREATE OR REPLACE FUNCTION private.is_admin()
