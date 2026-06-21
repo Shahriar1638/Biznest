@@ -10,12 +10,13 @@ BizNest started as a MongoDB + Mongoose backend. It was then scoped as a multite
 - Do not assume the existing NoSQL collection structure is the target architecture for the new backend.
 - Any `mongoose`, `mongodb`, or collection-based data flow should be considered part of the previous implementation.
 
-## New Backend Goal
+## New Backend Goal (NestJS Rebuild)
 
-- Use PostgreSQL as the primary database.
-- Use Prisma for schema, relations, and database access.
-- Use Supabase for hosted Postgres and related backend workflows.
+- **Framework: NestJS** — modular, opinionated architecture (controllers, services, modules, DTOs).
+- PostgreSQL as the primary database (via Prisma or TypeORM — TBD when setup begins).
+- Supabase for hosted Postgres and related backend workflows.
 - Normalize the data model around relational tables instead of nested documents.
+- The previous Prisma/Supabase backend scaffolding has been deleted — the NestJS backend will be built from scratch.
 
 ## Architecture & Scale Goals
 
@@ -40,7 +41,7 @@ BizNest started as a MongoDB + Mongoose backend. It was then scoped as a multite
 
 ## Working Rule For Future Threads
 
-If a new conversation starts, first assume the task is about the PostgreSQL / Prisma / Supabase rebuild unless the user explicitly says otherwise.
+This project is now in a hybrid state — the old Express/MongoDB backend (BizNest-server_v1) still runs on Vercel for the live site, while the new NestJS backend is being built from scratch. When the user is ready, they will signal to begin setting up the NestJS project.
 
 ## Useful Files
 

@@ -5,7 +5,7 @@ node_modules/
 Ideas/
 Biznest-client/lazy_loading_report.md
 ABOUT.md
-BizNest-server_v2/
+BizNest-serverV2/
 # Ignore environment file in BizNest-server
 BizNest-server/.env
 IMG Collection/
@@ -23,5 +23,7 @@ IMG Collection/
 Thumbs.db
 PROJECT_STATE.md
 PROJECT_STATE2.md
+RBAC.md
+MIGRATION_CONTEXT.md
 .vscode/
 .idea/
