@@ -7,7 +7,7 @@ import logo from '../../assets/logo.png';
 const PublicSignup = () => {
     const [formData, setFormData] = useState({
         email: '',
-        username: '',
+        name: '',
         password: '',
         confirmPassword: '',
         phone_number: '',
@@ -17,7 +17,7 @@ const PublicSignup = () => {
             type: 'customer',
             details: {}
         },
-        profileurl: '',
+        photoURL: '',
         ban_status: false
     });
     const [error, setError] = useState('');
@@ -138,18 +138,18 @@ const PublicSignup = () => {
                                 />
                             </div>
 
-                            {/* Username */}
+                            {/* Name */}
                             <div>
-                                <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
-                                    Username
+                                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+                                    Name
                                 </label>
                                 <input
-                                    id="username"
+                                    id="name"
                                     type="text"
-                                    name="username"
-                                    value={formData.username}
+                                    name="name"
+                                    value={formData.name}
                                     onChange={handleChange}
-                                    placeholder="Choose a username"
+                                    placeholder="Enter your name"
                                     className="input-biznest"
                                     style={{ color: '#1f2937' }}
                                     required
@@ -254,14 +254,14 @@ const PublicSignup = () => {
 
                             {/* Profile URL */}
                             <div>
-                                <label htmlFor="profileurl" className="block text-sm font-medium text-gray-700 mb-2">
-                                    Profile Image URL
+                                <label htmlFor="photoURL" className="block text-sm font-medium text-gray-700 mb-2">
+                                    Profile Photo URL
                                 </label>
                                 <input
-                                    id="profileurl"
+                                    id="photoURL"
                                     type="url"
-                                    name="profileurl"
-                                    value={formData.profileurl}
+                                    name="photoURL"
+                                    value={formData.photoURL}
                                     onChange={handleChange}
                                     placeholder="https://example.com/image.jpg"
                                     className="input-biznest"

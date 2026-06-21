@@ -35,37 +35,80 @@ Total Tables: **28**
 
 ## Table Relationships
 
+These are the direct foreign-key relationships in the draft schema.
+
 users → sellers
 users → customers
 users → admins
 users → address
+users → banners
+users → support_tickets
+users → ticket_messages
+users → ticket_admin_meta
+
 sellers → seller_financials
 sellers → seller_statements
 sellers → seller_offers
-sellers → seller_offer_targets
 sellers → products
-sellers → orders (via order_items)
 sellers → banner_payments
-sellers → support_tickets
+
+customers → address
 customers → wishlist
+customers → reviews
 customers → orders
 customers → payments
-customers → reviews
 customers → support_tickets
+
+address → users
+
+seller_financials → sellers
+seller_statements → sellers
+seller_offers → sellers
+seller_offer_targets → seller_offers
+seller_offer_targets → products
+seller_offer_targets → product_variants
+
+admin_offer_targets → admin_offers
+admin_offer_targets → products
+admin_offer_targets → product_variants
+admin_offer_targets → categories
+
+banners → users
+banner_payments → banners
+banner_payments → sellers
+
+products → sellers
 products → categories
-products → seller_offer_targets
-products → reviews
-products → order_items
-product_variants → wishlist
-product_variants → inventory
-product_variants → order_items
-regions → inventory
-regions → orders
-orders → order_items
-orders → payments
+products → users
+
+reviews → products
+reviews → customers
+
+product_variants → products
+
+inventory → product_variants
+inventory → regions
+
+orders → customers
+orders → regions
+
+order_items → orders
+order_items → product_variants
+order_items → sellers
+
+payments → orders
+
+support_tickets → users
+support_tickets → orders
+support_tickets → products
+
+ticket_messages → support_tickets
+ticket_messages → users
+
+ticket_admin_meta → support_tickets
+ticket_admin_meta → users
+
 delivery_logs → orders
-support_tickets → ticket_messages
-support_tickets → ticket_admin_meta
-admin_offers → admin_offer_targets
-seller_offers → seller_offer_targets
-banners → banner_payments
+delivery_logs → regions
+
+platform_revenue, categories, regions, and admin_offers do not have outgoing foreign keys in this draft.
