@@ -418,11 +418,19 @@ module.exports = (cartCollection, paymentCollection, productCollection, userColl
               if (unitDetails && unitDetails.unit_price) {
                 // Calculate total price = unit_price * quantity
                 const totalPrice = unitDetails.unit_price * cartItem.quantity;
+                calculatedTotal += totalPrice;
+
+                // Validate requested quantity against available inventory
+                if (cartItem.quantity > unitDetails.unit_quantity) {
+                  return res.status(400).json({
+                    success: false,
+                    error_type: 'validation_error',
+                    message: `Insufficient stock for "${product.product_name}". Requested: ${cartItem.quantity}, Available: ${unitDetails.unit_quantity}`
+                  });
+                }
                 
                 // Subtract the purchased quantity from product's available quantity
                 const newUnitQuantity = unitDetails.unit_quantity - cartItem.quantity;
-                
-                // Set quantity to 0 if it would go below 0, don't go negative
                 const finalUnitQuantity = newUnitQuantity < 0 ? 0 : newUnitQuantity;
                 
                 // Update the product's unit quantity in the database
@@ -467,18 +475,25 @@ module.exports = (cartCollection, paymentCollection, productCollection, userColl
                   console.log(`Warning: Seller not found or not a seller: ${sellerEmail}`);
                 }
               } else {
-                console.log(`Unit details not found for unitId: ${cartItem.unitId} in product: ${cartItem.productid}`);
-                // Keep price as 0 if unit not found
-                paymentData.cartitems[i].price = 0;
+                return res.status(400).json({
+                  success: false,
+                  error_type: 'validation_error',
+                  message: `Unit not found for productId: ${cartItem.productid}, unitId: ${cartItem.unitId}`
+                });
               }
             } else {
-              console.log(`No quantity_description found for product: ${cartItem.productid}`);
-              paymentData.cartitems[i].price = 0;
+              return res.status(400).json({
+                success: false,
+                error_type: 'validation_error',
+                message: `Product has no pricing info: ${cartItem.productid}`
+              });
             }
           } else {
-            console.log(`Product not found for productId: ${cartItem.productid}`);
-            // Keep price as 0 if product not found
-            paymentData.cartitems[i].price = 0;
+            return res.status(400).json({
+              success: false,
+              error_type: 'validation_error',
+              message: `Product not found for productId: ${cartItem.productid}`
+            });
           }
         }
         
@@ -486,16 +501,22 @@ module.exports = (cartCollection, paymentCollection, productCollection, userColl
         console.log('Calculated total from products:', calculatedTotal);
       }
       
-      // Verify the calculated total matches the payment amount (optional validation)
-      const amountWithShipping = calculatedTotal + 50; // Adding shipping cost
-      if (Math.abs(amountWithShipping - payment_amount) > 0.01) {
-        console.log(`Warning: Amount mismatch. Calculated: ${amountWithShipping}, Received: ${payment_amount}`);
+      // Verify the calculated total matches the payment amount (server-side price verification)
+      const SHIPPING_COST = 50;
+      const expectedTotal = calculatedTotal + SHIPPING_COST;
+      if (Math.abs(expectedTotal - payment_amount) > 0.01) {
+        return res.status(400).json({
+          success: false,
+          error_type: 'price_mismatch',
+          message: `Payment amount mismatch. Expected: ${expectedTotal}, Received: ${payment_amount}. Payment rejected for integrity.`
+        });
       }
       
-      // Process Stripe Payment
+      // Process Stripe Payment using SERVER-calculated amount, not client-supplied
+      const finalAmount = expectedTotal;
       console.log('Creating Stripe payment intent...');
       const paymentIntent = await stripe.paymentIntents.create({
-        amount: Math.round(payment_amount * 100), // Convert to cents
+        amount: Math.round(finalAmount * 100), // Convert to cents — server-verified amount
         currency: 'bdt',
         payment_method: paymentMethodId,
         confirmation_method: 'manual',
@@ -528,7 +549,7 @@ module.exports = (cartCollection, paymentCollection, productCollection, userColl
         stripe_payment_intent_id: paymentIntent.id,
         stripe_payment_method_id: paymentMethodId,
         calculated_total: calculatedTotal,
-        final_amount: payment_amount
+        final_amount: finalAmount
       });
       
       const validationError = paymentRecord.validateSync();
